@@ -86,3 +86,13 @@
 - [x] Validar que cursos GWM vão para GWM Mega Motors
 - [x] Garantir que colaboradores são vinculados à loja
 - [x] Atribuir automaticamente cursos ao criar colaborador
+
+
+## Isolamento de Dados por Loja
+- [x] Validar que funcionários de 5062 não aparecem em 4270 ou GWM
+- [x] Validar que cursos de uma loja não aparecem em outras
+- [x] Validar que atribuições são isoladas por loja
+- [x] Testar alternância entre lojas
+- [x] Garantir que relatórios mostram apenas dados da loja selecionada
+- [x] Backend filtra corretamente por storeId
+- [x] Frontend usa selectedStoreId em todas as queries
