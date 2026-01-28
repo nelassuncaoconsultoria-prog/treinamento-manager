@@ -1,4 +1,5 @@
 import { google } from 'googleapis';
+import { Readable } from 'node:stream';
 import { ENV } from './_core/env';
 import * as db from './db';
 
@@ -111,7 +112,8 @@ export async function uploadCertificate(
   area: 'vendas' | 'pos_vendas',
   fileName: string,
   fileBuffer: Buffer | Uint8Array,
-  employeeName: string
+  employeeName: string,
+  mimeType: string = 'application/pdf'
 ): Promise<{ fileId: string; fileUrl: string }> {
   try {
     // Criar estrutura de pastas
@@ -122,14 +124,20 @@ export async function uploadCertificate(
     const timestamp = new Date().toISOString().split('T')[0];
     const uploadFileName = `${employeeName} - ${timestamp} - ${fileName}`;
 
+    // Converter para Buffer se for Uint8Array
+    const buffer = Buffer.isBuffer(fileBuffer) ? fileBuffer : Buffer.from(fileBuffer);
+    
+    // Criar stream a partir do buffer
+    const stream = Readable.from(buffer);
+
     const response = await drive.files.create({
       requestBody: {
         name: uploadFileName,
         parents: [courseFolderId],
       },
       media: {
-        mimeType: 'application/pdf',
-        body: fileBuffer,
+        mimeType,
+        body: stream,
       },
       fields: 'id, webViewLink',
     });
@@ -137,13 +145,23 @@ export async function uploadCertificate(
     const fileId = response.data.id!;
     const fileUrl = response.data.webViewLink!;
 
-    // Salvar informações no banco de dados
-    await db.createCourseFolder({
-      courseId,
-      area,
-      folderId: courseFolderId,
-      folderPath: `${area === 'vendas' ? 'Vendas' : 'Pós-Vendas'}/${(await db.getCourseById(courseId))?.title}`,
-    });
+    // Verificar se pasta já existe antes de criar
+    const course = await db.getCourseById(courseId);
+    if (course) {
+      const folderPath = `${area === 'vendas' ? 'Vendas' : 'Pós-Vendas'}/${course.title}`;
+      // Apenas criar se não existir
+      try {
+        await db.createCourseFolder({
+          courseId,
+          area,
+          folderId: courseFolderId,
+          folderPath,
+        });
+      } catch (dbError) {
+        // Se falhar por duplicação, apenas log (não falha o upload)
+        console.warn('Pasta já registrada no banco de dados:', dbError);
+      }
+    }
 
     return {
       fileId,

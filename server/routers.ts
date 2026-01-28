@@ -289,6 +289,7 @@ export const appRouter = router({
         assignmentId: z.number(),
         fileName: z.string(),
         fileBuffer: z.string(), // Base64 encoded string
+        mimeType: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
         try {
@@ -313,6 +314,17 @@ export const appRouter = router({
           // Converter base64 para Buffer
           const buffer = Buffer.from(input.fileBuffer, 'base64');
           
+          // Determinar mimeType baseado na extensão do arquivo
+          let mimeType = input.mimeType || 'application/pdf';
+          const fileExt = input.fileName.split('.').pop()?.toLowerCase();
+          if (fileExt === 'jpg' || fileExt === 'jpeg') {
+            mimeType = 'image/jpeg';
+          } else if (fileExt === 'png') {
+            mimeType = 'image/png';
+          } else if (fileExt === 'pdf') {
+            mimeType = 'application/pdf';
+          }
+          
           try {
             const { fileId, fileUrl } = await uploadCertificate(
               assignment.storeId,
@@ -320,7 +332,8 @@ export const appRouter = router({
               employee.area,
               input.fileName,
               buffer,
-              employee.name
+              employee.name,
+              mimeType
             );
 
             // Atualizar atribuição com URL do certificado
@@ -343,7 +356,12 @@ export const appRouter = router({
             return { success: true, fileUrl, fileId };
           } catch (uploadError) {
             console.error('Erro detalhado no upload:', uploadError);
-            throw uploadError;
+            const errorMessage = uploadError instanceof Error ? uploadError.message : String(uploadError);
+            throw new TRPCError({
+              code: "INTERNAL_SERVER_ERROR",
+              message: `Erro ao fazer upload: ${errorMessage}`,
+              cause: uploadError,
+            });
           }
 
 
