@@ -74,3 +74,15 @@
 - [ ] Publicar na plataforma Manus
 - [ ] Validar acesso ao sistema publicado
 - [ ] Testar autenticação em produção
+
+
+## Melhoria: Atribuição Automática por Marca
+- [x] Adicionar campo de marca (FORD/GWM) ao schema de cursos
+- [x] Criar migrations para adicionar campo
+- [x] Implementar lógica de atribuição automática
+- [x] Atualizar interface de criação de cursos
+- [x] Testar atribuição automática
+- [x] Validar que cursos FORD vão para Ford Mega lojas
+- [x] Validar que cursos GWM vão para GWM Mega Motors
+- [x] Garantir que colaboradores são vinculados à loja
+- [x] Atribuir automaticamente cursos ao criar colaborador

@@ -54,12 +54,15 @@ export const courses = mysqlTable("courses", {
   title: varchar("title", { length: 255 }).notNull(),
   description: text("description"),
   area: mysqlEnum("area", ["vendas", "pos_vendas"]).notNull(), // Área associada ao curso
+  brand: mysqlEnum("brand", ["FORD", "GWM", "AMBOS"]).default("AMBOS").notNull(), // Marca do veículo: FORD, GWM ou AMBOS
+  autoAssign: boolean("autoAssign").default(true).notNull(), // Se deve atribuir automaticamente aos funcionários
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 
 export type Course = typeof courses.$inferSelect;
 export type InsertCourse = typeof courses.$inferInsert;
+export type CourseBrand = "FORD" | "GWM" | "AMBOS";
 
 /**
  * Atribuições de cursos aos funcionários

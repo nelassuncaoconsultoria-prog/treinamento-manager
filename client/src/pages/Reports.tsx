@@ -10,8 +10,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Loader2, TrendingUp } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from "recharts";
+import { Loader2 } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+
+interface ProgressData {
+  total: number;
+  completed: number;
+  percentage: number;
+}
 
 export default function Reports() {
   const { selectedStoreId, selectStore } = useStore();
@@ -31,6 +37,10 @@ export default function Reports() {
     { storeId: selectedStoreId || 0 },
     { enabled: !!selectedStoreId }
   );
+  const { data: overallProgress } = trpc.reports.overallProgress.useQuery(
+    { storeId: selectedStoreId || 0 },
+    { enabled: !!selectedStoreId }
+  );
 
   if (functionLoading || areaLoading || !selectedStoreId) {
     return (
@@ -43,26 +53,69 @@ export default function Reports() {
   const selectedStore = stores?.find(s => s.id === selectedStoreId);
 
   // Preparar dados para gráfico de funções
-  const functionChartData = reportByFunction?.map(func => ({
-    name: func.function,
-    "Taxa de Conclusão": func.completionPercentage,
-    "Concluídos": func.completedCourses,
-    "Pendentes": func.pendingCourses,
-  })) || [];
+  const functionChartData = reportByFunction ? Object.entries(reportByFunction).map(([func, data]) => ({
+    name: func,
+    "Taxa de Conclusão": data.percentage,
+    "Concluídos": data.completed,
+    "Pendentes": data.total - data.completed,
+  })) : [];
 
   // Preparar dados para gráfico de áreas
-  const areaChartData = reportByArea?.map(area => ({
-    name: area.area,
-    "Taxa de Conclusão": area.completionPercentage,
-    "Concluídos": area.completedCourses,
-    "Pendentes": area.pendingCourses,
-  })) || [];
+  const areaChartData = reportByArea ? Object.entries(reportByArea).map(([area, data]) => ({
+    name: area === "vendas" ? "Vendas" : "Pós-Vendas",
+    "Taxa de Conclusão": data.percentage,
+    "Concluídos": data.completed,
+    "Pendentes": data.total - data.completed,
+  })) : [];
 
   return (
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-bold">Relatórios de Treinamento</h1>
         <p className="text-muted-foreground mt-2">Loja: {selectedStore?.storeCode} - {selectedStore?.storeName}</p>
+      </div>
+
+      {/* Cards de Resumo */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Total de Treinamentos</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{overallProgress?.total || 0}</div>
+            <p className="text-xs text-muted-foreground mt-1">Atribuições ativas</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Concluídos</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">{overallProgress?.completed || 0}</div>
+            <p className="text-xs text-muted-foreground mt-1">Treinamentos finalizados</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Pendentes</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-amber-600">{overallProgress?.pending || 0}</div>
+            <p className="text-xs text-muted-foreground mt-1">Aguardando conclusão</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Taxa Geral</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-blue-600">{overallProgress?.percentage || 0}%</div>
+            <p className="text-xs text-muted-foreground mt-1">Progresso geral</p>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Gráfico de Progresso por Função */}
@@ -79,30 +132,9 @@ export default function Reports() {
               <YAxis />
               <Tooltip />
               <Legend />
-              <Bar dataKey="Taxa de Conclusão" fill="#3b82f6" />
+              <Bar dataKey="Concluídos" fill="#10b981" />
+              <Bar dataKey="Pendentes" fill="#f59e0b" />
             </BarChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
-
-      {/* Gráfico de Progresso por Área */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Progresso por Área</CardTitle>
-          <CardDescription>Comparação entre Vendas e Pós-Vendas</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={areaChartData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Line type="monotone" dataKey="Taxa de Conclusão" stroke="#3b82f6" strokeWidth={2} />
-              <Line type="monotone" dataKey="Concluídos" stroke="#10b981" strokeWidth={2} />
-              <Line type="monotone" dataKey="Pendentes" stroke="#f59e0b" strokeWidth={2} />
-            </LineChart>
           </ResponsiveContainer>
         </CardContent>
       </Card>
@@ -111,7 +143,7 @@ export default function Reports() {
       <Card>
         <CardHeader>
           <CardTitle>Detalhamento por Função</CardTitle>
-          <CardDescription>Informações detalhadas de cada função</CardDescription>
+          <CardDescription>Resumo de progresso por cargo</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
@@ -119,38 +151,36 @@ export default function Reports() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Função</TableHead>
-                  <TableHead>Área</TableHead>
-                  <TableHead>Total de Funcionários</TableHead>
-                  <TableHead>Cursos Concluídos</TableHead>
-                  <TableHead>Cursos Pendentes</TableHead>
+                  <TableHead>Total</TableHead>
+                  <TableHead>Concluídos</TableHead>
+                  <TableHead>Pendentes</TableHead>
                   <TableHead>Taxa de Conclusão</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {reportByFunction?.map((func) => (
-                  <TableRow key={func.function}>
-                    <TableCell className="font-medium">{func.function}</TableCell>
+                {reportByFunction && Object.entries(reportByFunction).map(([func, data]: [string, ProgressData]) => (
+                  <TableRow key={func}>
+                    <TableCell className="font-medium">{func}</TableCell>
+                    <TableCell>{data.total}</TableCell>
                     <TableCell>
-                      <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        {func.area === "vendas" ? "Vendas" : "Pós-Vendas"}
+                      <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        {data.completed}
                       </span>
                     </TableCell>
-                    <TableCell>{func.totalEmployees}</TableCell>
                     <TableCell>
-                      <span className="text-green-600 font-semibold">{func.completedCourses}</span>
-                    </TableCell>
-                    <TableCell>
-                      <span className="text-amber-600 font-semibold">{func.pendingCourses}</span>
+                      <span className="px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                        {data.total - data.completed}
+                      </span>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <div className="w-24 bg-gray-200 rounded-full h-2">
                           <div
                             className="bg-blue-600 h-2 rounded-full"
-                            style={{ width: `${func.completionPercentage}%` }}
+                            style={{ width: `${data.percentage}%` }}
                           />
                         </div>
-                        <span className="font-bold">{func.completionPercentage}%</span>
+                        <span className="font-bold">{data.percentage}%</span>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -158,6 +188,27 @@ export default function Reports() {
               </TableBody>
             </Table>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Gráfico de Progresso por Área */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Progresso por Área</CardTitle>
+          <CardDescription>Taxa de conclusão por área de atuação</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={areaChartData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="Concluídos" fill="#10b981" />
+              <Bar dataKey="Pendentes" fill="#f59e0b" />
+            </BarChart>
+          </ResponsiveContainer>
         </CardContent>
       </Card>
 
@@ -169,54 +220,44 @@ export default function Reports() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {reportByArea?.map((area) => (
-              <Card key={area.area} className="border">
+            {reportByArea && Object.entries(reportByArea).map(([area, data]: [string, ProgressData]) => (
+              <Card key={area} className="border">
                 <CardHeader>
-                  <CardTitle className="text-lg">{area.area}</CardTitle>
+                  <CardTitle className="text-lg">{area === "vendas" ? "Vendas" : "Pós-Vendas"}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-sm text-muted-foreground">Total de Funcionários</p>
-                      <p className="text-2xl font-bold">{area.totalEmployees}</p>
+                      <p className="text-sm text-muted-foreground">Total de Treinamentos</p>
+                      <p className="text-2xl font-bold">{data.total}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">Taxa de Conclusão</p>
-                      <p className="text-2xl font-bold text-blue-600">{area.completionPercentage}%</p>
+                      <p className="text-sm text-muted-foreground">Concluídos</p>
+                      <p className="text-2xl font-bold text-green-600">{data.completed}</p>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-sm text-muted-foreground">Concluídos</p>
-                      <p className="text-xl font-semibold text-green-600">{area.completedCourses}</p>
+                      <p className="text-sm text-muted-foreground">Pendentes</p>
+                      <p className="text-2xl font-bold text-amber-600">{data.total - data.completed}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">Pendentes</p>
-                      <p className="text-xl font-semibold text-amber-600">{area.pendingCourses}</p>
+                      <p className="text-sm text-muted-foreground">Taxa</p>
+                      <p className="text-2xl font-bold text-blue-600">{data.percentage}%</p>
                     </div>
                   </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-2">Progresso</p>
+                  <div className="pt-4">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm font-medium">Progresso</span>
+                      <span className="text-sm font-bold">{data.percentage}%</span>
+                    </div>
                     <div className="w-full bg-gray-200 rounded-full h-3">
                       <div
-                        className="bg-blue-600 h-3 rounded-full"
-                        style={{ width: `${area.completionPercentage}%` }}
+                        className="bg-blue-600 h-3 rounded-full transition-all"
+                        style={{ width: `${data.percentage}%` }}
                       />
                     </div>
                   </div>
-                  {Object.keys(area.functions).length > 0 && (
-                    <div>
-                      <p className="text-sm font-semibold mb-2">Funções:</p>
-                      <ul className="space-y-1 text-sm">
-                        {Object.entries(area.functions).map(([func, data]: [string, any]) => (
-                          <li key={func} className="flex justify-between">
-                            <span>{func}</span>
-                            <span className="text-muted-foreground">{data.totalEmployees} funcionários</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
                 </CardContent>
               </Card>
             ))}

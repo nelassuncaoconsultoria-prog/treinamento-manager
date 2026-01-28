@@ -54,12 +54,12 @@ export default function Dashboard() {
   const completionPercentage = totalAssignments > 0 ? Math.round((completedAssignments / totalAssignments) * 100) : 0;
 
   // Dados para gráfico de progresso por área
-  const areaChartData = reportByArea?.map(area => ({
-    name: area.area,
-    Concluído: area.completedCourses,
-    Pendente: area.pendingCourses,
-    Percentual: area.completionPercentage,
-  })) || [];
+  const areaChartData = reportByArea ? Object.entries(reportByArea).map(([area, data]: [string, any]) => ({
+    name: area === "vendas" ? "Vendas" : "Pós-Vendas",
+    Concluído: data.completed,
+    Pendente: data.total - data.completed,
+    Percentual: data.percentage,
+  })) : [];
 
   // Dados para gráfico de pizza
   const pieData = [
@@ -207,34 +207,34 @@ export default function Dashboard() {
 
       {/* Resumo por Área */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {reportByArea?.map(area => (
-          <Card key={area.area}>
+            {reportByArea && Object.entries(reportByArea).map(([area, data]: [string, any]) => (
+          <Card key={area}>
             <CardHeader>
-              <CardTitle>{area.area}</CardTitle>
-              <CardDescription>{area.totalEmployees} funcionários</CardDescription>
+              <CardTitle>{area === "vendas" ? "Vendas" : "Pós-Vendas"}</CardTitle>
+              <CardDescription>{data.total} funcionários</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div>
                   <div className="flex justify-between mb-2">
                     <span className="text-sm font-medium">Taxa de Conclusão</span>
-                    <span className="text-sm font-bold">{area.completionPercentage}%</span>
+                    <span className="text-sm font-bold">{data.percentage}%</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
                     <div
                       className="bg-blue-600 h-2 rounded-full"
-                      style={{ width: `${area.completionPercentage}%` }}
+                      style={{ width: `${data.percentage}%` }}
                     />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <p className="text-muted-foreground">Concluídos</p>
-                    <p className="text-lg font-bold text-green-600">{area.completedCourses}</p>
+                    <p className="text-lg font-bold text-green-600">{data.completed}</p>
                   </div>
                   <div>
                     <p className="text-muted-foreground">Pendentes</p>
-                    <p className="text-lg font-bold text-amber-600">{area.pendingCourses}</p>
+                    <p className="text-lg font-bold text-amber-600">{data.total - data.completed}</p>
                   </div>
                 </div>
               </div>
