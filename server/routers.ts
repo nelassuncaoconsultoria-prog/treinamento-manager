@@ -288,7 +288,7 @@ export const appRouter = router({
       .input(z.object({
         assignmentId: z.number(),
         fileName: z.string(),
-        fileBuffer: z.union([z.instanceof(Buffer), z.instanceof(Uint8Array)]),
+        fileBuffer: z.string(), // Base64 encoded string
       }))
       .mutation(async ({ input }) => {
         try {
@@ -310,38 +310,43 @@ export const appRouter = router({
           }
 
           // Fazer upload para Google Drive
-          // Converter Uint8Array para Buffer se necessário
-          const buffer = input.fileBuffer instanceof Buffer 
-            ? input.fileBuffer 
-            : Buffer.from(input.fileBuffer);
+          // Converter base64 para Buffer
+          const buffer = Buffer.from(input.fileBuffer, 'base64');
           
-          const { fileId, fileUrl } = await uploadCertificate(
-            assignment.storeId,
-            assignment.courseId,
-            employee.area,
-            input.fileName,
-            buffer,
-            employee.name
-          );
+          try {
+            const { fileId, fileUrl } = await uploadCertificate(
+              assignment.storeId,
+              assignment.courseId,
+              employee.area,
+              input.fileName,
+              buffer,
+              employee.name
+            );
 
-          // Atualizar atribuição com URL do certificado
-          await db.updateCourseAssignment(input.assignmentId, {
-            status: "concluido",
-            completedAt: new Date(),
-            certificateUrl: fileUrl,
-            certificateKey: fileId,
-          });
-
-          // Notificar o owner
-          const store = await db.getStoreById(assignment.storeId);
-          if (store) {
-            await notifyOwner({
-              title: "Certificado Enviado",
-              content: `${employee.name} completou o treinamento "${course.title}" na loja ${store.storeName}. Certificado armazenado no Google Drive.`,
+            // Atualizar atribuição com URL do certificado
+            await db.updateCourseAssignment(input.assignmentId, {
+              status: "concluido",
+              completedAt: new Date(),
+              certificateUrl: fileUrl,
+              certificateKey: fileId,
             });
+
+            // Notificar o owner
+            const store = await db.getStoreById(assignment.storeId);
+            if (store) {
+              await notifyOwner({
+                title: "Certificado Enviado",
+                content: `${employee.name} completou o treinamento "${course.title}" na loja ${store.storeName}. Certificado armazenado no Google Drive.`,
+              });
+            }
+
+            return { success: true, fileUrl, fileId };
+          } catch (uploadError) {
+            console.error('Erro detalhado no upload:', uploadError);
+            throw uploadError;
           }
 
-          return { success: true, fileUrl, fileId };
+
         } catch (error) {
           console.error("Erro ao fazer upload do certificado:", error);
           throw new TRPCError({

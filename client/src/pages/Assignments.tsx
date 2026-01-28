@@ -139,14 +139,22 @@ export default function Assignments() {
     setUploadingId(assignmentId);
     try {
       const buffer = await file.arrayBuffer();
+      const bytes = new Uint8Array(buffer);
+      let binary = '';
+      for (let i = 0; i < bytes.byteLength; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      const base64String = btoa(binary);
+      
       await uploadMutation.mutateAsync({
         assignmentId,
         fileName: file.name,
-        fileBuffer: new Uint8Array(buffer) as any,
+        fileBuffer: base64String,
       });
       toast.success("Certificado enviado com sucesso!");
       refetch();
     } catch (error) {
+      console.error('Erro no upload:', error);
       toast.error("Erro ao fazer upload do certificado");
     } finally {
       setUploadingId(null);

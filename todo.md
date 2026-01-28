@@ -145,3 +145,10 @@
 - [x] Adicionar API tRPC para obter dados de modalidade
 - [x] Criar gráfico de pizza no dashboard
 - [x] Testar gráfico com dados reais
+
+
+## Correção: Erro de Upload de Certificados
+- [x] Investigar erro de upload no backend
+- [x] Verificar integração com Google Drive
+- [x] Corrigir implementação de upload (usar base64 em vez de Uint8Array)
+- [x] Testar upload com arquivo real
