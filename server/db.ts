@@ -1,6 +1,6 @@
 import { eq, and, desc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, employees, InsertEmployee, courses, InsertCourse, courseAssignments, InsertCourseAssignment, googleDriveConfig, InsertGoogleDriveConfig, courseFolders, InsertCourseFolder } from "../drizzle/schema";
+import { InsertUser, users, employees, InsertEmployee, courses, InsertCourse, courseAssignments, InsertCourseAssignment, googleDriveConfig, InsertGoogleDriveConfig, courseFolders, InsertCourseFolder, stores, InsertStore } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -259,4 +259,42 @@ export async function getCourseFolderByCourseAndArea(courseId: number, area: "ve
     and(eq(courseFolders.courseId, courseId), eq(courseFolders.area, area))
   ).limit(1);
   return result.length > 0 ? result[0] : undefined;
+}
+
+// ============ STORES ============
+
+export async function getStores() {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return db.select().from(stores).orderBy(desc(stores.createdAt));
+}
+
+export async function getStoreById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  
+  const result = await db.select().from(stores).where(eq(stores.id, id)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getEmployeesByStore(storeId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return db.select().from(employees).where(eq(employees.storeId, storeId));
+}
+
+export async function getCoursesByStore(storeId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return db.select().from(courses).where(eq(courses.storeId, storeId));
+}
+
+export async function getAssignmentsByStore(storeId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return db.select().from(courseAssignments).where(eq(courseAssignments.storeId, storeId));
 }

@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useStore } from "@/hooks/useStore";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -40,7 +41,19 @@ interface CourseForm {
 
 export default function Courses() {
   const [open, setOpen] = useState(false);
-  const { data: courses, isLoading, refetch } = trpc.courses.list.useQuery();
+  const { selectedStoreId, selectStore } = useStore();
+  const { data: stores } = trpc.stores.list.useQuery();
+
+  useEffect(() => {
+    if (!selectedStoreId && stores && stores.length > 0) {
+      selectStore(stores[0].id);
+    }
+  }, [stores, selectedStoreId, selectStore]);
+
+  const { data: courses, isLoading, refetch } = trpc.courses.list.useQuery(
+    { storeId: selectedStoreId || 0 },
+    { enabled: !!selectedStoreId }
+  );
   const createMutation = trpc.courses.create.useMutation();
   const deleteMutation = trpc.courses.delete.useMutation();
   const { register, handleSubmit, reset } = useForm<CourseForm>({
@@ -50,8 +63,15 @@ export default function Courses() {
   });
 
   const onSubmit = async (data: CourseForm) => {
+    if (!selectedStoreId) {
+      toast.error("Selecione uma loja");
+      return;
+    }
     try {
-      await createMutation.mutateAsync(data);
+      await createMutation.mutateAsync({
+        storeId: selectedStoreId,
+        ...data,
+      });
       toast.success("Curso criado com sucesso!");
       reset();
       setOpen(false);
@@ -72,7 +92,7 @@ export default function Courses() {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || !selectedStoreId) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="animate-spin h-8 w-8" />
@@ -80,12 +100,14 @@ export default function Courses() {
     );
   }
 
+  const selectedStore = stores?.find(s => s.id === selectedStoreId);
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Gerenciamento de Cursos</h1>
-          <p className="text-muted-foreground mt-2">Cadastre e gerencie os cursos de treinamento</p>
+          <p className="text-muted-foreground mt-2">Loja: {selectedStore?.storeCode} - {selectedStore?.storeName}</p>
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>

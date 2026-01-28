@@ -1,4 +1,6 @@
 import { trpc } from "@/lib/trpc";
+import { useStore } from "@/hooks/useStore";
+import { useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -12,16 +14,33 @@ import { Loader2, TrendingUp } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from "recharts";
 
 export default function Reports() {
-  const { data: reportByFunction, isLoading: functionLoading } = trpc.reports.trainingProgressByFunction.useQuery();
-  const { data: reportByArea, isLoading: areaLoading } = trpc.reports.trainingProgressByArea.useQuery();
+  const { selectedStoreId, selectStore } = useStore();
+  const { data: stores } = trpc.stores.list.useQuery();
 
-  if (functionLoading || areaLoading) {
+  useEffect(() => {
+    if (!selectedStoreId && stores && stores.length > 0) {
+      selectStore(stores[0].id);
+    }
+  }, [stores, selectedStoreId, selectStore]);
+
+  const { data: reportByFunction, isLoading: functionLoading } = trpc.reports.trainingProgressByFunction.useQuery(
+    { storeId: selectedStoreId || 0 },
+    { enabled: !!selectedStoreId }
+  );
+  const { data: reportByArea, isLoading: areaLoading } = trpc.reports.trainingProgressByArea.useQuery(
+    { storeId: selectedStoreId || 0 },
+    { enabled: !!selectedStoreId }
+  );
+
+  if (functionLoading || areaLoading || !selectedStoreId) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="animate-spin h-8 w-8" />
       </div>
     );
   }
+
+  const selectedStore = stores?.find(s => s.id === selectedStoreId);
 
   // Preparar dados para gráfico de funções
   const functionChartData = reportByFunction?.map(func => ({
@@ -43,7 +62,7 @@ export default function Reports() {
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-bold">Relatórios de Treinamento</h1>
-        <p className="text-muted-foreground mt-2">Análise detalhada do progresso de treinamentos por função e área</p>
+        <p className="text-muted-foreground mt-2">Loja: {selectedStore?.storeCode} - {selectedStore?.storeName}</p>
       </div>
 
       {/* Gráfico de Progresso por Função */}

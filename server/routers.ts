@@ -20,14 +20,30 @@ export const appRouter = router({
     }),
   }),
 
+  // ============ STORES ============
+  stores: router({
+    list: protectedProcedure.query(async () => {
+      return db.getStores();
+    }),
+
+    get: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        return db.getStoreById(input.id);
+      }),
+  }),
+
   // ============ EMPLOYEES ============
   employees: router({
-    list: protectedProcedure.query(async () => {
-      return db.getEmployees();
-    }),
+    list: protectedProcedure
+      .input(z.object({ storeId: z.number() }))
+      .query(async ({ input }) => {
+        return db.getEmployeesByStore(input.storeId);
+      }),
 
     create: protectedProcedure
       .input(z.object({
+        storeId: z.number(),
         name: z.string().min(1),
         email: z.string().email(),
         function: z.string().min(1),
@@ -36,6 +52,7 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         try {
           const result = await db.createEmployee({
+            storeId: input.storeId,
             name: input.name,
             email: input.email,
             function: input.function,
@@ -82,12 +99,15 @@ export const appRouter = router({
 
   // ============ COURSES ============
   courses: router({
-    list: protectedProcedure.query(async () => {
-      return db.getCourses();
-    }),
+    list: protectedProcedure
+      .input(z.object({ storeId: z.number() }))
+      .query(async ({ input }) => {
+        return db.getCoursesByStore(input.storeId);
+      }),
 
     create: protectedProcedure
       .input(z.object({
+        storeId: z.number(),
         title: z.string().min(1),
         description: z.string().optional(),
         area: z.enum(["vendas", "pos_vendas"]),
@@ -95,6 +115,7 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         try {
           const result = await db.createCourse({
+            storeId: input.storeId,
             title: input.title,
             description: input.description,
             area: input.area,
@@ -137,9 +158,11 @@ export const appRouter = router({
 
   // ============ COURSE ASSIGNMENTS ============
   assignments: router({
-    list: protectedProcedure.query(async () => {
-      return db.getCourseAssignments();
-    }),
+    list: protectedProcedure
+      .input(z.object({ storeId: z.number() }))
+      .query(async ({ input }) => {
+        return db.getAssignmentsByStore(input.storeId);
+      }),
 
     listByEmployee: protectedProcedure
       .input(z.object({ employeeId: z.number() }))
@@ -149,12 +172,14 @@ export const appRouter = router({
 
     create: protectedProcedure
       .input(z.object({
+        storeId: z.number(),
         employeeId: z.number(),
         courseId: z.number(),
       }))
       .mutation(async ({ input }) => {
         try {
           const result = await db.createCourseAssignment({
+            storeId: input.storeId,
             employeeId: input.employeeId,
             courseId: input.courseId,
             status: "pendente",
@@ -199,10 +224,11 @@ export const appRouter = router({
         // Notificar o owner
         const employee = await db.getEmployeeById(assignment.employeeId);
         const course = await db.getCourseById(assignment.courseId);
-        if (employee && course) {
+        const store = await db.getStoreById(assignment.storeId);
+        if (employee && course && store) {
           await notifyOwner({
             title: "Treinamento Concluído",
-            content: `${employee.name} completou o treinamento "${course.title}" na área de ${employee.area === "vendas" ? "Vendas" : "Pós-Vendas"}.`,
+            content: `${employee.name} completou o treinamento "${course.title}" na loja ${store.storeName} (área de ${employee.area === "vendas" ? "Vendas" : "Pós-Vendas"}).`,
           });
         }
 
@@ -219,144 +245,106 @@ export const appRouter = router({
 
   // ============ REPORTS ============
   reports: router({
-    trainingProgressByFunction: protectedProcedure.query(async () => {
-      const assignments = await db.getCourseAssignments();
-      const employees = await db.getEmployees();
-      const courses = await db.getCourses();
+    trainingProgressByFunction: protectedProcedure
+      .input(z.object({ storeId: z.number() }))
+      .query(async ({ input }) => {
+        const assignments = await db.getAssignmentsByStore(input.storeId);
+        const employees = await db.getEmployeesByStore(input.storeId);
+        const courses = await db.getCoursesByStore(input.storeId);
 
-      // Agrupar por função
-      const reportByFunction: Record<string, any> = {};
+        // Agrupar por função
+        const reportByFunction: Record<string, any> = {};
 
-      for (const employee of employees) {
-        if (!reportByFunction[employee.function]) {
-          reportByFunction[employee.function] = {
-            function: employee.function,
-            area: employee.area,
+        for (const employee of employees) {
+          if (!reportByFunction[employee.function]) {
+            reportByFunction[employee.function] = {
+              function: employee.function,
+              area: employee.area,
+              totalEmployees: 0,
+              totalCourses: 0,
+              completedCourses: 0,
+              pendingCourses: 0,
+              employees: [],
+              completionPercentage: 0,
+            };
+          }
+
+          const employeeAssignments = assignments.filter(a => a.employeeId === employee.id);
+          const completedCount = employeeAssignments.filter(a => a.status === "concluido").length;
+
+          reportByFunction[employee.function].totalEmployees += 1;
+          reportByFunction[employee.function].totalCourses += employeeAssignments.length;
+          reportByFunction[employee.function].completedCourses += completedCount;
+          reportByFunction[employee.function].pendingCourses += employeeAssignments.filter(a => a.status === "pendente").length;
+        }
+
+        // Calcular percentual de conclusão
+        for (const func in reportByFunction) {
+          const total = reportByFunction[func].totalCourses;
+          const completed = reportByFunction[func].completedCourses;
+          reportByFunction[func].completionPercentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+        }
+
+        return Object.values(reportByFunction);
+      }),
+
+    trainingProgressByArea: protectedProcedure
+      .input(z.object({ storeId: z.number() }))
+      .query(async ({ input }) => {
+        const assignments = await db.getAssignmentsByStore(input.storeId);
+        const employees = await db.getEmployeesByStore(input.storeId);
+
+        const reportByArea: Record<string, any> = {
+          "Vendas": {
+            area: "Vendas",
             totalEmployees: 0,
             totalCourses: 0,
             completedCourses: 0,
             pendingCourses: 0,
-            employees: [],
             completionPercentage: 0,
-          };
-        }
-
-        const employeeAssignments = assignments.filter(a => a.employeeId === employee.id);
-        const completedCount = employeeAssignments.filter(a => a.status === "concluido").length;
-
-        reportByFunction[employee.function].totalEmployees += 1;
-        reportByFunction[employee.function].totalCourses += employeeAssignments.length;
-        reportByFunction[employee.function].completedCourses += completedCount;
-        reportByFunction[employee.function].pendingCourses += employeeAssignments.filter(a => a.status === "pendente").length;
-
-        reportByFunction[employee.function].employees.push({
-          id: employee.id,
-          name: employee.name,
-          email: employee.email,
-          totalCourses: employeeAssignments.length,
-          completedCourses: completedCount,
-          completionPercentage: employeeAssignments.length > 0 ? Math.round((completedCount / employeeAssignments.length) * 100) : 0,
-        });
-      }
-
-      // Calcular percentual de conclusão por função
-      for (const func in reportByFunction) {
-        const report = reportByFunction[func];
-        report.completionPercentage = report.totalCourses > 0 ? Math.round((report.completedCourses / report.totalCourses) * 100) : 0;
-      }
-
-      return Object.values(reportByFunction);
-    }),
-
-    trainingProgressByArea: protectedProcedure.query(async () => {
-      const assignments = await db.getCourseAssignments();
-      const employees = await db.getEmployees();
-
-      const reportByArea: Record<string, any> = {
-        vendas: {
-          area: "Vendas",
-          totalEmployees: 0,
-          totalCourses: 0,
-          completedCourses: 0,
-          pendingCourses: 0,
-          completionPercentage: 0,
-          functions: {},
-        },
-        pos_vendas: {
-          area: "Pós-Vendas",
-          totalEmployees: 0,
-          totalCourses: 0,
-          completedCourses: 0,
-          pendingCourses: 0,
-          completionPercentage: 0,
-          functions: {},
-        },
-      };
-
-      for (const employee of employees) {
-        const area = employee.area;
-        const employeeAssignments = assignments.filter(a => a.employeeId === employee.id);
-        const completedCount = employeeAssignments.filter(a => a.status === "concluido").length;
-
-        reportByArea[area].totalEmployees += 1;
-        reportByArea[area].totalCourses += employeeAssignments.length;
-        reportByArea[area].completedCourses += completedCount;
-        reportByArea[area].pendingCourses += employeeAssignments.filter(a => a.status === "pendente").length;
-
-        if (!reportByArea[area].functions[employee.function]) {
-          reportByArea[area].functions[employee.function] = {
+            functions: {},
+          },
+          "Pós-Vendas": {
+            area: "Pós-Vendas",
             totalEmployees: 0,
-            completedCourses: 0,
             totalCourses: 0,
-          };
-        }
-        reportByArea[area].functions[employee.function].totalEmployees += 1;
-        reportByArea[area].functions[employee.function].totalCourses += employeeAssignments.length;
-        reportByArea[area].functions[employee.function].completedCourses += completedCount;
-      }
-
-      // Calcular percentuais
-      for (const area in reportByArea) {
-        const report = reportByArea[area];
-        report.completionPercentage = report.totalCourses > 0 ? Math.round((report.completedCourses / report.totalCourses) * 100) : 0;
-      }
-
-      return Object.values(reportByArea);
-    }),
-
-    employeeProgress: protectedProcedure
-      .input(z.object({ employeeId: z.number() }))
-      .query(async ({ input }) => {
-        const employee = await db.getEmployeeById(input.employeeId);
-        if (!employee) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
-            message: "Funcionário não encontrado",
-          });
-        }
-
-        const assignments = await db.getCourseAssignmentsByEmployee(input.employeeId);
-        const courses = await db.getCourses();
-
-        const courseDetails = assignments.map(assignment => {
-          const course = courses.find(c => c.id === assignment.courseId);
-          return {
-            ...assignment,
-            courseTitle: course?.title,
-            courseDescription: course?.description,
-          };
-        });
-
-        const completedCount = assignments.filter(a => a.status === "concluido").length;
-
-        return {
-          employee,
-          assignments: courseDetails,
-          totalCourses: assignments.length,
-          completedCourses: completedCount,
-          pendingCourses: assignments.length - completedCount,
-          completionPercentage: assignments.length > 0 ? Math.round((completedCount / assignments.length) * 100) : 0,
+            completedCourses: 0,
+            pendingCourses: 0,
+            completionPercentage: 0,
+            functions: {},
+          },
         };
+
+        for (const employee of employees) {
+          const areaKey = employee.area === "vendas" ? "Vendas" : "Pós-Vendas";
+          const employeeAssignments = assignments.filter(a => a.employeeId === employee.id);
+          const completedCount = employeeAssignments.filter(a => a.status === "concluido").length;
+
+          reportByArea[areaKey].totalEmployees += 1;
+          reportByArea[areaKey].totalCourses += employeeAssignments.length;
+          reportByArea[areaKey].completedCourses += completedCount;
+          reportByArea[areaKey].pendingCourses += employeeAssignments.filter(a => a.status === "pendente").length;
+
+          if (!reportByArea[areaKey].functions[employee.function]) {
+            reportByArea[areaKey].functions[employee.function] = {
+              totalEmployees: 0,
+              completedCourses: 0,
+              pendingCourses: 0,
+            };
+          }
+          reportByArea[areaKey].functions[employee.function].totalEmployees += 1;
+          reportByArea[areaKey].functions[employee.function].completedCourses += completedCount;
+          reportByArea[areaKey].functions[employee.function].pendingCourses += employeeAssignments.filter(a => a.status === "pendente").length;
+        }
+
+        // Calcular percentual de conclusão
+        for (const area in reportByArea) {
+          const total = reportByArea[area].totalCourses;
+          const completed = reportByArea[area].completedCourses;
+          reportByArea[area].completionPercentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+        }
+
+        return Object.values(reportByArea);
       }),
   }),
 });

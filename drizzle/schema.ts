@@ -31,8 +31,9 @@ export type InsertUser = typeof users.$inferInsert;
  */
 export const employees = mysqlTable("employees", {
   id: int("id").autoincrement().primaryKey(),
+  storeId: int("storeId").notNull(), // ID da loja
   name: varchar("name", { length: 255 }).notNull(),
-  email: varchar("email", { length: 320 }).notNull().unique(),
+  email: varchar("email", { length: 320 }).notNull(),
   function: varchar("function", { length: 255 }).notNull(), // Cargo/Função do funcionário
   area: mysqlEnum("area", ["vendas", "pos_vendas"]).notNull(), // Área: Vendas ou Pós-Vendas
   status: mysqlEnum("status", ["ativo", "inativo"]).default("ativo").notNull(),
@@ -49,6 +50,7 @@ export type InsertEmployee = typeof employees.$inferInsert;
  */
 export const courses = mysqlTable("courses", {
   id: int("id").autoincrement().primaryKey(),
+  storeId: int("storeId").notNull(), // ID da loja
   title: varchar("title", { length: 255 }).notNull(),
   description: text("description"),
   area: mysqlEnum("area", ["vendas", "pos_vendas"]).notNull(), // Área associada ao curso
@@ -65,6 +67,7 @@ export type InsertCourse = typeof courses.$inferInsert;
  */
 export const courseAssignments = mysqlTable("course_assignments", {
   id: int("id").autoincrement().primaryKey(),
+  storeId: int("storeId").notNull(), // ID da loja
   employeeId: int("employeeId").notNull(),
   courseId: int("courseId").notNull(),
   status: mysqlEnum("status", ["pendente", "concluido"]).default("pendente").notNull(),
@@ -111,3 +114,20 @@ export const courseFolders = mysqlTable("course_folders", {
 
 export type CourseFolder = typeof courseFolders.$inferSelect;
 export type InsertCourseFolder = typeof courseFolders.$inferInsert;
+
+/**
+ * Lojas/Filiais
+ * Armazena as diferentes lojas que usarão o sistema
+ */
+export const stores = mysqlTable("stores", {
+  id: int("id").autoincrement().primaryKey(),
+  storeCode: varchar("storeCode", { length: 50 }).notNull().unique(), // Código da loja (ex: 5062)
+  storeName: varchar("storeName", { length: 255 }).notNull(), // Nome da loja
+  city: varchar("city", { length: 255 }), // Cidade
+  status: mysqlEnum("status", ["ativo", "inativo"]).default("ativo").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Store = typeof stores.$inferSelect;
+export type InsertStore = typeof stores.$inferInsert;

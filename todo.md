@@ -45,3 +45,16 @@
 - [x] Relatórios por função
 - [x] Notificações ao owner
 - [x] Interface com sidebar de navegação
+
+
+## Melhoria: Sistema de Lojas
+- [x] Atualizar schema para incluir tabela de lojas
+- [x] Adicionar campo storeId em employees, courses e assignments
+- [x] Criar migrations do banco de dados
+- [x] Implementar APIs de seleção de loja
+- [x] Criar seletor de lojas no dashboard
+- [x] Filtrar dados por loja selecionada
+- [x] Testar isolamento de dados por loja
+- [x] Validar relatórios por loja
+- [x] Atualizar todas as páginas com contexto de loja
+- [x] Implementar hook useStore para persistência de seleção

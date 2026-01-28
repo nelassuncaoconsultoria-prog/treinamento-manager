@@ -3,17 +3,44 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { trpc } from "@/lib/trpc";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { Loader2, Users, BookOpen, CheckCircle2, AlertCircle } from "lucide-react";
+import { useStore } from "@/hooks/useStore";
+import { useEffect } from "react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444"];
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const { data: assignments, isLoading: assignmentsLoading } = trpc.assignments.list.useQuery();
-  const { data: employees, isLoading: employeesLoading } = trpc.employees.list.useQuery();
-  const { data: courses, isLoading: coursesLoading } = trpc.courses.list.useQuery();
-  const { data: reportByArea, isLoading: reportLoading } = trpc.reports.trainingProgressByArea.useQuery();
+  const { data: stores, isLoading: storesLoading } = trpc.stores.list.useQuery();
+  const { selectedStoreId, selectStore } = useStore();
 
-  if (assignmentsLoading || employeesLoading || coursesLoading || reportLoading) {
+  // Se não há loja selecionada e temos lojas disponíveis, selecionar a primeira
+  useEffect(() => {
+    if (!selectedStoreId && stores && stores.length > 0) {
+      selectStore(stores[0].id);
+    }
+  }, [stores, selectedStoreId, selectStore]);
+
+  const { data: assignments, isLoading: assignmentsLoading } = trpc.assignments.list.useQuery(
+    { storeId: selectedStoreId || 0 },
+    { enabled: !!selectedStoreId }
+  );
+  const { data: employees, isLoading: employeesLoading } = trpc.employees.list.useQuery(
+    { storeId: selectedStoreId || 0 },
+    { enabled: !!selectedStoreId }
+  );
+  const { data: courses, isLoading: coursesLoading } = trpc.courses.list.useQuery(
+    { storeId: selectedStoreId || 0 },
+    { enabled: !!selectedStoreId }
+  );
+  const { data: reportByArea, isLoading: reportLoading } = trpc.reports.trainingProgressByArea.useQuery(
+    { storeId: selectedStoreId || 0 },
+    { enabled: !!selectedStoreId }
+  );
+
+  const selectedStore = stores?.find(s => s.id === selectedStoreId);
+
+  if (storesLoading || !selectedStoreId) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="animate-spin h-8 w-8" />
@@ -43,10 +70,40 @@ export default function Dashboard() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold">Dashboard de Treinamentos</h1>
-        <p className="text-muted-foreground mt-2">Bem-vindo, {user?.name}! Acompanhe o progresso dos treinamentos.</p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold">Dashboard de Treinamentos</h1>
+          <p className="text-muted-foreground mt-2">Bem-vindo, {user?.name}! Acompanhe o progresso dos treinamentos.</p>
+        </div>
+        <div className="w-64">
+          <label className="text-sm font-medium mb-2 block">Selecionar Loja</label>
+          <Select
+            value={selectedStoreId?.toString() || ""}
+            onValueChange={(value) => selectStore(Number(value))}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione uma loja" />
+            </SelectTrigger>
+            <SelectContent>
+              {stores?.map((store) => (
+                <SelectItem key={store.id} value={store.id.toString()}>
+                  {store.storeCode} - {store.storeName}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
+
+      {selectedStore && (
+        <Card className="bg-blue-50 border-blue-200">
+          <CardContent className="pt-6">
+            <p className="text-sm text-muted-foreground">Loja Selecionada</p>
+            <p className="text-xl font-semibold">{selectedStore.storeCode} - {selectedStore.storeName}</p>
+            <p className="text-sm text-muted-foreground">{selectedStore.city}</p>
+          </CardContent>
+        </Card>
+      )}
 
       {/* KPIs */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useStore } from "@/hooks/useStore";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -38,10 +39,27 @@ interface AssignmentForm {
 export default function Assignments() {
   const [open, setOpen] = useState(false);
   const [uploadingId, setUploadingId] = useState<number | null>(null);
+  const { selectedStoreId, selectStore } = useStore();
+  const { data: stores } = trpc.stores.list.useQuery();
+
+  useEffect(() => {
+    if (!selectedStoreId && stores && stores.length > 0) {
+      selectStore(stores[0].id);
+    }
+  }, [stores, selectedStoreId, selectStore]);
   
-  const { data: assignments, isLoading, refetch } = trpc.assignments.list.useQuery();
-  const { data: employees } = trpc.employees.list.useQuery();
-  const { data: courses } = trpc.courses.list.useQuery();
+  const { data: assignments, isLoading, refetch } = trpc.assignments.list.useQuery(
+    { storeId: selectedStoreId || 0 },
+    { enabled: !!selectedStoreId }
+  );
+  const { data: employees } = trpc.employees.list.useQuery(
+    { storeId: selectedStoreId || 0 },
+    { enabled: !!selectedStoreId }
+  );
+  const { data: courses } = trpc.courses.list.useQuery(
+    { storeId: selectedStoreId || 0 },
+    { enabled: !!selectedStoreId }
+  );
   
   const createMutation = trpc.assignments.create.useMutation();
   const completeMutation = trpc.assignments.complete.useMutation();
@@ -59,8 +77,13 @@ export default function Assignments() {
       toast.error("Selecione um funcionário e um curso");
       return;
     }
+    if (!selectedStoreId) {
+      toast.error("Selecione uma loja");
+      return;
+    }
     try {
       await createMutation.mutateAsync({
+        storeId: selectedStoreId,
         employeeId: Number(data.employeeId),
         courseId: Number(data.courseId),
       });
@@ -98,7 +121,7 @@ export default function Assignments() {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || !selectedStoreId) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="animate-spin h-8 w-8" />
@@ -106,6 +129,7 @@ export default function Assignments() {
     );
   }
 
+  const selectedStore = stores?.find(s => s.id === selectedStoreId);
   const getEmployeeName = (id: number) => employees?.find(e => e.id === id)?.name || "N/A";
   const getCourseName = (id: number) => courses?.find(c => c.id === id)?.title || "N/A";
 
@@ -114,7 +138,7 @@ export default function Assignments() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Atribuição de Cursos</h1>
-          <p className="text-muted-foreground mt-2">Atribua cursos aos funcionários e acompanhe o progresso</p>
+          <p className="text-muted-foreground mt-2">Loja: {selectedStore?.storeCode} - {selectedStore?.storeName}</p>
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
