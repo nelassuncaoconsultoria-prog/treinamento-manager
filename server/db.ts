@@ -1,6 +1,6 @@
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, employees, InsertEmployee, courses, InsertCourse, courseAssignments, InsertCourseAssignment, googleDriveConfig, InsertGoogleDriveConfig, courseFolders, InsertCourseFolder, stores, InsertStore } from "../drizzle/schema";
+import { InsertUser, users, employees, InsertEmployee, courses, InsertCourse, courseAssignments, InsertCourseAssignment, googleDriveConfig, InsertGoogleDriveConfig, courseFolders, InsertCourseFolder, stores, InsertStore, courseRequiredFunctions, InsertCourseRequiredFunction } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -321,4 +321,67 @@ export async function getModalityDistribution(storeId: number) {
   });
   
   return distribution;
+}
+
+// ============ COURSE REQUIRED FUNCTIONS ============
+
+export async function addRequiredFunctionToCourse(courseId: number, function_: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.insert(courseRequiredFunctions).values({
+    courseId,
+    function: function_,
+  });
+}
+
+export async function getRequiredFunctionsForCourse(courseId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db.select().from(courseRequiredFunctions).where(eq(courseRequiredFunctions.courseId, courseId));
+}
+
+export async function deleteRequiredFunctionFromCourse(courseId: number, function_: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.delete(courseRequiredFunctions)
+    .where(and(
+      eq(courseRequiredFunctions.courseId, courseId),
+      eq(courseRequiredFunctions.function, function_)
+    ));
+}
+
+export async function assignCourseToEmployeesByFunction(storeId: number, courseId: number, functions: string[]) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // Buscar todos os funcionários da loja que têm uma das funções obrigatórias
+  const employeesWithFunction = await db.select().from(employees).where(
+    and(
+      eq(employees.storeId, storeId),
+      inArray(employees.function, functions)
+    )
+  );
+  
+  // Atribuir o curso a cada funcionário
+  for (const employee of employeesWithFunction) {
+    // Verificar se já existe atribuição
+    const existing = await db.select().from(courseAssignments).where(
+      and(
+        eq(courseAssignments.employeeId, employee.id),
+        eq(courseAssignments.courseId, courseId)
+      )
+    );
+    
+    if (existing.length === 0) {
+      await db.insert(courseAssignments).values({
+        storeId,
+        employeeId: employee.id,
+        courseId,
+        status: "pendente",
+      });
+    }
+  }
 }

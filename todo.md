@@ -152,3 +152,12 @@
 - [x] Verificar integração com Google Drive
 - [x] Corrigir implementação de upload (usar base64 em vez de Uint8Array)
 - [x] Testar upload com arquivo real
+
+
+## Atribuição Automática por Função
+- [x] Adicionar tabela de relação entre cursos e funções
+- [x] Criar migrations para nova tabela
+- [x] Implementar APIs de gerenciamento de funções obrigatórias
+- [x] Criar interface de seleção de funções ao criar curso
+- [x] Implementar atribuição automática aos colaboradores
+- [x] Testar atribuição automática por função

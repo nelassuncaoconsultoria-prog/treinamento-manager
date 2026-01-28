@@ -29,7 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Plus, Trash2 } from "lucide-react";
+import { Loader2, Plus, Trash2, X } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -38,12 +38,24 @@ interface CourseForm {
   description?: string;
   area: "vendas" | "pos_vendas";
   modality: "online" | "presencial" | "abraadiff";
+  requiredFunctions?: string[];
 }
 
 export default function Courses() {
   const [open, setOpen] = useState(false);
+  const [selectedFunctions, setSelectedFunctions] = useState<string[]>([]);
+  const [functionInput, setFunctionInput] = useState("");
   const { selectedStoreId, selectStore } = useStore();
   const { data: stores } = trpc.stores.list.useQuery();
+  const { data: employees } = trpc.employees.list.useQuery(
+    { storeId: selectedStoreId || 0 },
+    { enabled: !!selectedStoreId }
+  );
+
+  // Extrair funções únicas dos funcionários
+  const availableFunctions = Array.from(
+    new Set(employees?.map(e => e.function) || [])
+  ).sort();
 
   useEffect(() => {
     if (!selectedStoreId && stores && stores.length > 0) {
@@ -72,14 +84,28 @@ export default function Courses() {
       await createMutation.mutateAsync({
         storeId: selectedStoreId,
         ...data,
+        requiredFunctions: selectedFunctions.length > 0 ? selectedFunctions : undefined,
       });
       toast.success("Curso criado com sucesso!");
       reset();
+      setSelectedFunctions([]);
+      setFunctionInput("");
       setOpen(false);
       refetch();
     } catch (error) {
       toast.error("Erro ao criar curso");
     }
+  };
+
+  const addFunction = () => {
+    if (functionInput.trim() && !selectedFunctions.includes(functionInput.trim())) {
+      setSelectedFunctions([...selectedFunctions, functionInput.trim()]);
+      setFunctionInput("");
+    }
+  };
+
+  const removeFunction = (func: string) => {
+    setSelectedFunctions(selectedFunctions.filter(f => f !== func));
   };
 
   const handleDelete = async (id: number) => {
@@ -117,7 +143,7 @@ export default function Courses() {
               Novo Curso
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-md">
             <DialogHeader>
               <DialogTitle>Cadastrar Novo Curso</DialogTitle>
               <DialogDescription>
@@ -169,6 +195,45 @@ export default function Courses() {
                     <SelectItem value="abraadiff">ABRAADIFF</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+              <div>
+                <Label>Funções Obrigatórias (Opcional)</Label>
+                <p className="text-xs text-muted-foreground mb-2">Selecione as funções que devem realizar este curso. O curso será atribuído automaticamente aos funcionários com essas funções.</p>
+                <div className="space-y-2">
+                  <div className="flex gap-2">
+                    <Select value={functionInput} onValueChange={setFunctionInput}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione uma função" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableFunctions.map((func) => (
+                          <SelectItem key={func} value={func}>
+                            {func}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button type="button" onClick={addFunction} variant="outline">
+                      Adicionar
+                    </Button>
+                  </div>
+                  {selectedFunctions.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {selectedFunctions.map((func) => (
+                        <div key={func} className="flex items-center gap-1 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+                          {func}
+                          <button
+                            type="button"
+                            onClick={() => removeFunction(func)}
+                            className="ml-1 hover:bg-blue-200 rounded-full p-0.5"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
               <Button type="submit" className="w-full" disabled={createMutation.isPending}>
                 {createMutation.isPending ? "Criando..." : "Criar Curso"}

@@ -141,6 +141,7 @@ export const appRouter = router({
         brand: z.enum(["FORD", "GWM", "AMBOS"]).default("AMBOS"),
         modality: z.enum(["online", "presencial", "abraadiff"]).default("online"),
         autoAssign: z.boolean().default(true),
+        requiredFunctions: z.array(z.string()).optional(),
       }))
       .mutation(async ({ input }) => {
         try {
@@ -156,8 +157,15 @@ export const appRouter = router({
           
           const courseId = result[0]?.insertId || 0;
           
-          // Atribuir automaticamente se habilitado
-          if (input.autoAssign && courseId) {
+          // Adicionar funções obrigatórias se fornecidas
+          if (input.requiredFunctions && input.requiredFunctions.length > 0) {
+            for (const func of input.requiredFunctions) {
+              await db.addRequiredFunctionToCourse(courseId, func);
+            }
+            // Atribuir automaticamente aos funcionários com essas funções
+            await db.assignCourseToEmployeesByFunction(input.storeId, courseId, input.requiredFunctions);
+          } else if (input.autoAssign && courseId) {
+            // Se não há funções obrigatórias, atribuir por marca
             await autoAssignCourseToStores(courseId);
           }
           
@@ -207,6 +215,26 @@ export const appRouter = router({
       .input(z.object({ id: z.number() }))
       .mutation(async ({ input }) => {
         await db.deleteCourse(input.id);
+        return { success: true };
+      }),
+
+    getRequiredFunctions: protectedProcedure
+      .input(z.object({ courseId: z.number() }))
+      .query(async ({ input }) => {
+        return db.getRequiredFunctionsForCourse(input.courseId);
+      }),
+
+    addRequiredFunction: protectedProcedure
+      .input(z.object({ courseId: z.number(), function: z.string() }))
+      .mutation(async ({ input }) => {
+        await db.addRequiredFunctionToCourse(input.courseId, input.function);
+        return { success: true };
+      }),
+
+    removeRequiredFunction: protectedProcedure
+      .input(z.object({ courseId: z.number(), function: z.string() }))
+      .mutation(async ({ input }) => {
+        await db.deleteRequiredFunctionFromCourse(input.courseId, input.function);
         return { success: true };
       }),
   }),

@@ -136,3 +136,18 @@ export const stores = mysqlTable("stores", {
 
 export type Store = typeof stores.$inferSelect;
 export type InsertStore = typeof stores.$inferInsert;
+
+/**
+ * Funções obrigatórias para cursos
+ * Armazena quais funções são obrigatórias para cada curso
+ * Um curso pode ter múltiplas funções obrigatórias
+ */
+export const courseRequiredFunctions = mysqlTable("course_required_functions", {
+  id: int("id").autoincrement().primaryKey(),
+  courseId: int("courseId").notNull(), // ID do curso
+  function: varchar("function", { length: 255 }).notNull(), // Nome da função obrigatória
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type CourseRequiredFunction = typeof courseRequiredFunctions.$inferSelect;
+export type InsertCourseRequiredFunction = typeof courseRequiredFunctions.$inferInsert;
