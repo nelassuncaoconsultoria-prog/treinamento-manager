@@ -37,6 +37,10 @@ export default function Dashboard() {
     { storeId: selectedStoreId || 0 },
     { enabled: !!selectedStoreId }
   );
+  const { data: modalityDistribution, isLoading: modalityLoading } = trpc.dashboard.modalityDistribution.useQuery(
+    { storeId: selectedStoreId || 0 },
+    { enabled: !!selectedStoreId }
+  );
 
   const selectedStore = stores?.find(s => s.id === selectedStoreId);
 
@@ -66,6 +70,13 @@ export default function Dashboard() {
     { name: "Concluído", value: completedAssignments },
     { name: "Pendente", value: pendingAssignments },
   ];
+
+  // Dados para gráfico de modalidade
+  const modalityData = modalityDistribution ? [
+    { name: "Online", value: modalityDistribution.online },
+    { name: "Presencial", value: modalityDistribution.presencial },
+    { name: "ABRAADIFF", value: modalityDistribution.abraadiff },
+  ] : [];
 
   return (
     <div className="space-y-8">
@@ -204,6 +215,35 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Gráfico de Modalidade */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Distribuição por Modalidade</CardTitle>
+          <CardDescription>Proporção de cursos por tipo de modalidade</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={300}>
+            <PieChart>
+              <Pie
+                data={modalityData}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={({ name, value }) => `${name}: ${value}`}
+                outerRadius={80}
+                fill="#8884d8"
+                dataKey="value"
+              >
+                {modalityData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={["#3b82f6", "#8b5cf6", "#ec4899"][index]} />
+                ))}
+              </Pie>
+              <Tooltip />
+            </PieChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
 
       {/* Resumo por Área */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

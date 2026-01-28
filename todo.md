@@ -138,3 +138,10 @@
 - [x] Adicionar filtros por modalidade (coluna na tabela)
 - [x] Atualizar dashboard com informações de modalidade
 - [x] Testar e validar funcionalidade
+
+
+## Gráfico de Distribuição por Modalidade
+- [x] Implementar função de cálculo de distribuição por modalidade
+- [x] Adicionar API tRPC para obter dados de modalidade
+- [x] Criar gráfico de pizza no dashboard
+- [x] Testar gráfico com dados reais

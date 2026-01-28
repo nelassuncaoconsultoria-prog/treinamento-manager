@@ -298,3 +298,27 @@ export async function getAssignmentsByStore(storeId: number) {
   
   return db.select().from(courseAssignments).where(eq(courseAssignments.storeId, storeId));
 }
+
+
+// ============ DASHBOARD ANALYTICS ============
+
+export async function getModalityDistribution(storeId: number) {
+  const db = await getDb();
+  if (!db) return { online: 0, presencial: 0, abraadiff: 0 };
+  
+  const allCourses = await db.select().from(courses).where(eq(courses.storeId, storeId));
+  
+  const distribution = {
+    online: 0,
+    presencial: 0,
+    abraadiff: 0,
+  };
+  
+  allCourses.forEach(course => {
+    if (course.modality === 'online') distribution.online++;
+    else if (course.modality === 'presencial') distribution.presencial++;
+    else if (course.modality === 'abraadiff') distribution.abraadiff++;
+  });
+  
+  return distribution;
+}

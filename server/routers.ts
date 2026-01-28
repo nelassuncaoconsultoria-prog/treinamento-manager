@@ -430,6 +430,15 @@ export const appRouter = router({
         };
       }),
   }),
+
+  // ============ DASHBOARD ============
+  dashboard: router({
+    modalityDistribution: protectedProcedure
+      .input(z.object({ storeId: z.number() }))
+      .query(async ({ input }) => {
+        return db.getModalityDistribution(input.storeId);
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;
