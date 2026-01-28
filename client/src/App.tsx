@@ -8,6 +8,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import DashboardLayout from "./components/DashboardLayout";
 import Dashboard from "./pages/Dashboard";
 import Employees from "./pages/Employees";
+import EmployeeProfile from "./pages/EmployeeProfile";
 import Courses from "./pages/Courses";
 import Assignments from "./pages/Assignments";
 import Reports from "./pages/Reports";
@@ -39,6 +40,7 @@ function Router() {
       <Switch>
         <Route path={"/dashboard"} component={Dashboard} />
         <Route path={"/funcionarios"} component={Employees} />
+        <Route path={"/employees/:id"} component={EmployeeProfile} />
         <Route path={"/cursos"} component={Courses} />
         <Route path={"/atribuicoes"} component={Assignments} />
         <Route path={"/relatorios"} component={Reports} />

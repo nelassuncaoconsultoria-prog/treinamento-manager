@@ -28,7 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Plus, Trash2 } from "lucide-react";
+import { Loader2, Plus, Trash2, Eye } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -209,7 +209,16 @@ export default function Employees() {
                         {employee.status === "ativo" ? "Ativo" : "Inativo"}
                       </span>
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right space-x-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        asChild
+                      >
+                        <a href={`/employees/${employee.id}`}>
+                          <Eye className="h-4 w-4" />
+                        </a>
+                      </Button>
                       <Button
                         variant="ghost"
                         size="sm"

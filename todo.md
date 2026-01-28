@@ -106,3 +106,14 @@
 - [x] Implementar download de certificados
 - [x] Adicionar validação de tipos de arquivo (PDF, JPG, PNG)
 - [x] Testar fluxo completo de upload e download
+
+
+## Página de Perfil do Funcionário
+- [x] Criar layout de perfil com informações básicas
+- [x] Implementar seção de histórico de treinamentos
+- [x] Adicionar timeline visual de progresso
+- [x] Criar seção de certificados obtidos
+- [x] Adicionar estatísticas e gráficos
+- [x] Integrar rota de perfil no App.tsx
+- [x] Adicionar link para perfil na página de Funcionários
+- [x] Testar navegação e funcionalidades
