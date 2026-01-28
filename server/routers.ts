@@ -139,6 +139,7 @@ export const appRouter = router({
         description: z.string().optional(),
         area: z.enum(["vendas", "pos_vendas"]),
         brand: z.enum(["FORD", "GWM", "AMBOS"]).default("AMBOS"),
+        modality: z.enum(["online", "presencial", "abraadiff"]).default("online"),
         autoAssign: z.boolean().default(true),
       }))
       .mutation(async ({ input }) => {
@@ -149,6 +150,7 @@ export const appRouter = router({
             description: input.description,
             area: input.area,
             brand: input.brand,
+            modality: input.modality,
             autoAssign: input.autoAssign,
           });
           
@@ -181,6 +183,7 @@ export const appRouter = router({
         description: z.string().optional(),
         area: z.enum(["vendas", "pos_vendas"]).optional(),
         brand: z.enum(["FORD", "GWM", "AMBOS"]).optional(),
+        modality: z.enum(["online", "presencial", "abraadiff"]).optional(),
         autoAssign: z.boolean().optional(),
       }))
       .mutation(async ({ input }) => {

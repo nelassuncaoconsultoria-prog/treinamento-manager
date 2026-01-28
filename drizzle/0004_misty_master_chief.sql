@@ -1,0 +1,1 @@
+ALTER TABLE `courses` ADD `modality` enum('online','presencial','abraadiff') DEFAULT 'online' NOT NULL;

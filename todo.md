@@ -128,3 +128,13 @@
 
 ## Correções e Bugs
 - [x] Corrigir erro de upload de certificados
+
+
+## Modalidades de Cursos
+- [x] Adicionar campo de modalidade ao schema de cursos
+- [x] Criar migrations para adicionar campo
+- [x] Atualizar APIs de cursos com modalidade
+- [x] Implementar seletor de modalidade na interface
+- [x] Adicionar filtros por modalidade (coluna na tabela)
+- [x] Atualizar dashboard com informações de modalidade
+- [x] Testar e validar funcionalidade

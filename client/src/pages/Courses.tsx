@@ -37,6 +37,7 @@ interface CourseForm {
   title: string;
   description?: string;
   area: "vendas" | "pos_vendas";
+  modality: "online" | "presencial" | "abraadiff";
 }
 
 export default function Courses() {
@@ -154,6 +155,21 @@ export default function Courses() {
                   </SelectContent>
                 </Select>
               </div>
+              <div>
+                <Label htmlFor="modality">Modalidade</Label>
+                <Select defaultValue="online" onValueChange={(value) => {
+                  register("modality").onChange({ target: { value } });
+                }}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="online">Online</SelectItem>
+                    <SelectItem value="presencial">Presencial</SelectItem>
+                    <SelectItem value="abraadiff">ABRAADIFF</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <Button type="submit" className="w-full" disabled={createMutation.isPending}>
                 {createMutation.isPending ? "Criando..." : "Criar Curso"}
               </Button>
@@ -175,6 +191,7 @@ export default function Courses() {
                   <TableHead>Título</TableHead>
                   <TableHead>Descrição</TableHead>
                   <TableHead>Área</TableHead>
+                  <TableHead>Modalidade</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
@@ -186,6 +203,11 @@ export default function Courses() {
                     <TableCell>
                       <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                         {course.area === "vendas" ? "Vendas" : "Pós-Vendas"}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                        {course.modality === "online" ? "Online" : course.modality === "presencial" ? "Presencial" : "ABRAADIFF"}
                       </span>
                     </TableCell>
                     <TableCell className="text-right">
