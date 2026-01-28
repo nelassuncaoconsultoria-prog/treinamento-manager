@@ -285,7 +285,7 @@ export const appRouter = router({
       .input(z.object({
         assignmentId: z.number(),
         fileName: z.string(),
-        fileBuffer: z.instanceof(Buffer),
+        fileBuffer: z.union([z.instanceof(Buffer), z.instanceof(Uint8Array)]),
       }))
       .mutation(async ({ input }) => {
         try {
@@ -307,12 +307,17 @@ export const appRouter = router({
           }
 
           // Fazer upload para Google Drive
+          // Converter Uint8Array para Buffer se necessário
+          const buffer = input.fileBuffer instanceof Buffer 
+            ? input.fileBuffer 
+            : Buffer.from(input.fileBuffer);
+          
           const { fileId, fileUrl } = await uploadCertificate(
             assignment.storeId,
             assignment.courseId,
             employee.area,
             input.fileName,
-            input.fileBuffer,
+            buffer,
             employee.name
           );
 

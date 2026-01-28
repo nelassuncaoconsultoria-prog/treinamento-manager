@@ -117,3 +117,7 @@
 - [x] Integrar rota de perfil no App.tsx
 - [x] Adicionar link para perfil na página de Funcionários
 - [x] Testar navegação e funcionalidades
+
+
+## Correções e Bugs
+- [x] Corrigir erro de upload de certificados

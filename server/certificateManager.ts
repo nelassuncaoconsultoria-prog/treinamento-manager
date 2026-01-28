@@ -110,7 +110,7 @@ export async function uploadCertificate(
   courseId: number,
   area: 'vendas' | 'pos_vendas',
   fileName: string,
-  fileBuffer: Buffer,
+  fileBuffer: Buffer | Uint8Array,
   employeeName: string
 ): Promise<{ fileId: string; fileUrl: string }> {
   try {
