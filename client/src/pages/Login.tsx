@@ -11,10 +11,16 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const utils = trpc.useUtils();
   
   const loginMutation = trpc.auth.localLogin.useMutation({
-    onSuccess: () => {
-      setLocation('/dashboard');
+    onSuccess: async () => {
+      // Invalidate and refetch auth.me query
+      await utils.auth.me.invalidate();
+      // Wait a bit then redirect
+      setTimeout(() => {
+        setLocation('/dashboard');
+      }, 200);
     },
     onError: (err) => {
       setError(err.message);
