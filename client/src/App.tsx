@@ -13,6 +13,7 @@ import Courses from "./pages/Courses";
 import Assignments from "./pages/Assignments";
 import Reports from "./pages/Reports";
 import Home from "./pages/Home";
+import Login from "./pages/Login";
 
 function Router() {
   const { isAuthenticated, loading } = useAuth();
@@ -28,8 +29,9 @@ function Router() {
   if (!isAuthenticated) {
     return (
       <Switch>
-        <Route path={"/"} component={Home} />
-        <Route path={"/404"} component={NotFound} />
+        <Route path="/login" component={Login} />
+        <Route path="/" component={Home} />
+        <Route path="/404" component={NotFound} />
         <Route component={NotFound} />
       </Switch>
     );
@@ -38,14 +40,14 @@ function Router() {
   return (
     <DashboardLayout>
       <Switch>
-        <Route path={"/dashboard"} component={Dashboard} />
-        <Route path={"/funcionarios"} component={Employees} />
-        <Route path={"/employees/:id"} component={EmployeeProfile} />
-        <Route path={"/cursos"} component={Courses} />
-        <Route path={"/atribuicoes"} component={Assignments} />
-        <Route path={"/relatorios"} component={Reports} />
-        <Route path={"/"} component={Dashboard} />
-        <Route path={"/404"} component={NotFound} />
+        <Route path="/dashboard" component={Dashboard} />
+        <Route path="/funcionarios" component={Employees} />
+        <Route path="/employees/:id" component={EmployeeProfile} />
+        <Route path="/cursos" component={Courses} />
+        <Route path="/atribuicoes" component={Assignments} />
+        <Route path="/relatorios" component={Reports} />
+        <Route path="/" component={Dashboard} />
+        <Route path="/404" component={NotFound} />
         <Route component={NotFound} />
       </Switch>
     </DashboardLayout>

@@ -77,6 +77,17 @@ export async function upsertUser(user: InsertUser): Promise<void> {
   }
 }
 
+export async function getUserByEmail(email: string) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get user: database not available");
+    return undefined;
+  }
+
+  const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
 export async function getUserByOpenId(openId: string) {
   const db = await getDb();
   if (!db) {
@@ -384,4 +395,26 @@ export async function assignCourseToEmployeesByFunction(storeId: number, courseI
       });
     }
   }
+}
+
+
+// ============ LOCAL AUTH ============
+
+export async function createLocalUser(email: string, name: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // Use email as openId for local auth
+  const result = await db.insert(users).values({
+    openId: email,
+    email: email,
+    name: name,
+    loginMethod: "local",
+    role: "user",
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    lastSignedIn: new Date(),
+  });
+  
+  return result;
 }

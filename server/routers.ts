@@ -8,6 +8,8 @@ import { TRPCError } from "@trpc/server";
 import { notifyOwner } from "./_core/notification";
 import { uploadCertificate } from "./certificateManager";
 import { autoAssignCourseToStores, reAssignCourseByBrand, assignPendingCoursesToEmployee } from "./autoAssignCourses";
+import { COOKIE_NAME } from "@shared/const";
+import { sdk } from "./_core/sdk";
 
 export const appRouter = router({
   system: systemRouter,
@@ -20,6 +22,39 @@ export const appRouter = router({
         success: true,
       } as const;
     }),
+    localLogin: publicProcedure
+      .input(z.object({
+        email: z.string().email(),
+        password: z.string().min(4),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        if (input.password !== 'demo123') {
+          throw new TRPCError({
+            code: 'UNAUTHORIZED',
+            message: 'Email ou senha inválidos',
+          });
+        }
+        let user = await db.getUserByEmail(input.email);
+        if (!user) {
+          await db.createLocalUser(input.email, input.email.split('@')[0]);
+          user = await db.getUserByEmail(input.email);
+        }
+        if (!user) {
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'Erro ao criar usuário',
+          });
+        }
+        const sessionToken = await sdk.createSessionToken(user.openId, {
+          name: user.name || user.email || '',
+        });
+        const cookieOptions = getSessionCookieOptions(ctx.req);
+        ctx.res.cookie(COOKIE_NAME, sessionToken, cookieOptions);
+        return {
+          success: true,
+          user,
+        };
+      })
   }),
 
   // ============ STORES ============
