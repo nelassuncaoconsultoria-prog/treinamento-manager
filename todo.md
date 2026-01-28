@@ -171,3 +171,16 @@
 - [x] Testar com múltiplos cursos
 - [x] Criar testes vitest para validar correção
 - [x] Todos os testes passando
+
+
+## Preparação para Render Deployment
+- [x] Criar arquivo render.yaml com configuração de deployment
+- [x] Criar arquivo RENDER_DEPLOYMENT.md com guia completo
+- [x] Criar arquivo ENVIRONMENT_VARIABLES.md com documentação de variáveis
+- [x] Criar arquivo GITHUB_SETUP.md com guia de exportação para GitHub
+- [x] Criar arquivo RENDER_QUICK_START.md com início rápido
+- [x] Criar script build.sh para otimizar build no Render
+- [x] Verificar package.json com scripts corretos (build e start)
+- [x] Validar que server/_core/index.ts usa process.env.PORT
+- [x] Confirmar .gitignore está configurado corretamente
+- [x] Preparar código para publicação no Render
