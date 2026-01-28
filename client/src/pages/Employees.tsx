@@ -56,7 +56,7 @@ export default function Employees() {
   );
   const createMutation = trpc.employees.create.useMutation();
   const deleteMutation = trpc.employees.delete.useMutation();
-  const { register, handleSubmit, reset, watch } = useForm<EmployeeForm>({
+  const { register, handleSubmit, reset, watch, setValue } = useForm<EmployeeForm>({
     defaultValues: {
       area: "vendas",
     },
@@ -152,7 +152,7 @@ export default function Employees() {
               <div>
                 <Label htmlFor="area">Área</Label>
                 <Select defaultValue="vendas" onValueChange={(value) => {
-                  register("area").onChange({ target: { value } });
+                  setValue("area", value as "vendas" | "pos_vendas");
                 }}>
                   <SelectTrigger>
                     <SelectValue />

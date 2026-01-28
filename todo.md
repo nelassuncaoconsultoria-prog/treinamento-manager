@@ -70,7 +70,7 @@
 - [x] Validar organização de arquivos no Drive
 
 ## Publicação
-- [ ] Preparar checkpoint final
+- [x] Preparar checkpoint final
 - [ ] Publicar na plataforma Manus
 - [ ] Validar acesso ao sistema publicado
 - [ ] Testar autenticação em produção
@@ -166,5 +166,8 @@
 ## Bug: Seleção de Área (Pós-Vendas)
 - [x] Investigar bug onde Pós-Vendas é registrado como Vendas
 - [x] Corrigir seleção de área na página de Cursos
+- [x] Corrigir seleção de área na página de Funcionários
 - [x] Validar que área é salva corretamente no banco de dados
 - [x] Testar com múltiplos cursos
+- [x] Criar testes vitest para validar correção
+- [x] Todos os testes passando
