@@ -6,6 +6,7 @@ import { z } from "zod";
 import * as db from "./db";
 import { TRPCError } from "@trpc/server";
 import { notifyOwner } from "./_core/notification";
+import { uploadCertificate } from "./certificateManager";
 
 export const appRouter = router({
   system: systemRouter,
@@ -233,6 +234,68 @@ export const appRouter = router({
         }
 
         return { success: true };
+      }),
+
+    uploadCertificate: protectedProcedure
+      .input(z.object({
+        assignmentId: z.number(),
+        fileName: z.string(),
+        fileBuffer: z.instanceof(Buffer),
+      }))
+      .mutation(async ({ input }) => {
+        try {
+          const assignment = await db.getCourseAssignmentById(input.assignmentId);
+          if (!assignment) {
+            throw new TRPCError({
+              code: "NOT_FOUND",
+              message: "Atribuição não encontrada",
+            });
+          }
+
+          const employee = await db.getEmployeeById(assignment.employeeId);
+          const course = await db.getCourseById(assignment.courseId);
+          if (!employee || !course) {
+            throw new TRPCError({
+              code: "NOT_FOUND",
+              message: "Funcionário ou curso não encontrado",
+            });
+          }
+
+          // Fazer upload para Google Drive
+          const { fileId, fileUrl } = await uploadCertificate(
+            assignment.storeId,
+            assignment.courseId,
+            employee.area,
+            input.fileName,
+            input.fileBuffer,
+            employee.name
+          );
+
+          // Atualizar atribuição com URL do certificado
+          await db.updateCourseAssignment(input.assignmentId, {
+            status: "concluido",
+            completedAt: new Date(),
+            certificateUrl: fileUrl,
+            certificateKey: fileId,
+          });
+
+          // Notificar o owner
+          const store = await db.getStoreById(assignment.storeId);
+          if (store) {
+            await notifyOwner({
+              title: "Certificado Enviado",
+              content: `${employee.name} completou o treinamento "${course.title}" na loja ${store.storeName}. Certificado armazenado no Google Drive.`,
+            });
+          }
+
+          return { success: true, fileUrl, fileId };
+        } catch (error) {
+          console.error("Erro ao fazer upload do certificado:", error);
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Erro ao fazer upload do certificado",
+          });
+        }
       }),
 
     delete: protectedProcedure

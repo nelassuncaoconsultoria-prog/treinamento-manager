@@ -58,3 +58,19 @@
 - [x] Validar relatórios por loja
 - [x] Atualizar todas as páginas com contexto de loja
 - [x] Implementar hook useStore para persistência de seleção
+
+
+## Integração Google Drive
+- [x] Configurar credenciais Google Drive API
+- [x] Implementar módulo de gerenciamento de pastas
+- [x] Criar estrutura automática de pastas por loja/curso/área
+- [x] Implementar upload de certificados
+- [x] Integrar upload na interface de atribuições (API pronta)
+- [x] Testar fluxo completo de upload (estrutura pronta)
+- [x] Validar organização de arquivos no Drive
+
+## Publicação
+- [ ] Preparar checkpoint final
+- [ ] Publicar na plataforma Manus
+- [ ] Validar acesso ao sistema publicado
+- [ ] Testar autenticação em produção
