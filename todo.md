@@ -119,5 +119,12 @@
 - [x] Testar navegação e funcionalidades
 
 
+## Configuração Google Drive
+- [x] Receber credenciais do Google Drive
+- [x] Configurar GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON
+- [x] Configurar GOOGLE_DRIVE_ROOT_FOLDER_ID
+- [x] Validar credenciais com testes
+- [x] Reiniciar servidor com novas credenciais
+
 ## Correções e Bugs
 - [x] Corrigir erro de upload de certificados
