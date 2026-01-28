@@ -161,3 +161,10 @@
 - [x] Criar interface de seleção de funções ao criar curso
 - [x] Implementar atribuição automática aos colaboradores
 - [x] Testar atribuição automática por função
+
+
+## Bug: Seleção de Área (Pós-Vendas)
+- [x] Investigar bug onde Pós-Vendas é registrado como Vendas
+- [x] Corrigir seleção de área na página de Cursos
+- [x] Validar que área é salva corretamente no banco de dados
+- [x] Testar com múltiplos cursos

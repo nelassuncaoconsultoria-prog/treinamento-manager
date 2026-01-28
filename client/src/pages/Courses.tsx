@@ -69,7 +69,7 @@ export default function Courses() {
   );
   const createMutation = trpc.courses.create.useMutation();
   const deleteMutation = trpc.courses.delete.useMutation();
-  const { register, handleSubmit, reset } = useForm<CourseForm>({
+  const { register, handleSubmit, reset, setValue } = useForm<CourseForm>({
     defaultValues: {
       area: "vendas",
     },
@@ -170,7 +170,7 @@ export default function Courses() {
               <div>
                 <Label htmlFor="area">Área</Label>
                 <Select defaultValue="vendas" onValueChange={(value) => {
-                  register("area").onChange({ target: { value } });
+                  setValue("area", value as "vendas" | "pos_vendas");
                 }}>
                   <SelectTrigger>
                     <SelectValue />
@@ -184,7 +184,7 @@ export default function Courses() {
               <div>
                 <Label htmlFor="modality">Modalidade</Label>
                 <Select defaultValue="online" onValueChange={(value) => {
-                  register("modality").onChange({ target: { value } });
+                  setValue("modality", value as "online" | "presencial" | "abraadiff");
                 }}>
                   <SelectTrigger>
                     <SelectValue />
