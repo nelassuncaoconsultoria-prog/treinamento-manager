@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import { useStore } from "@/hooks/useStore";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
@@ -27,9 +26,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Plus, CheckCircle2, Clock, Upload, Trash2 } from "lucide-react";
+import { Loader2, Plus, CheckCircle2, Clock, Upload, Trash2, Download, File } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { useState, useEffect, useRef } from "react";
 
 interface AssignmentForm {
   employeeId: number;
@@ -39,6 +39,8 @@ interface AssignmentForm {
 export default function Assignments() {
   const [open, setOpen] = useState(false);
   const [uploadingId, setUploadingId] = useState<number | null>(null);
+  const [dragOverId, setDragOverId] = useState<number | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { selectedStoreId, selectStore } = useStore();
   const { data: stores } = trpc.stores.list.useQuery();
 
@@ -64,6 +66,7 @@ export default function Assignments() {
   const createMutation = trpc.assignments.create.useMutation();
   const completeMutation = trpc.assignments.complete.useMutation();
   const deleteMutation = trpc.assignments.delete.useMutation();
+  const uploadMutation = trpc.assignments.uploadCertificate.useMutation();
   
   const { register, handleSubmit, reset, watch } = useForm<AssignmentForm>({
     defaultValues: {
@@ -118,6 +121,54 @@ export default function Assignments() {
       refetch();
     } catch (error) {
       toast.error("Erro ao deletar atribuição");
+    }
+  };
+
+  const handleFileSelect = async (file: File, assignmentId: number) => {
+    const validTypes = ["application/pdf", "image/jpeg", "image/png", "image/jpg"];
+    if (!validTypes.includes(file.type)) {
+      toast.error("Tipo de arquivo não suportado. Use PDF, JPG ou PNG.");
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Arquivo muito grande. Máximo 10MB.");
+      return;
+    }
+
+    setUploadingId(assignmentId);
+    try {
+      const buffer = await file.arrayBuffer();
+      await uploadMutation.mutateAsync({
+        assignmentId,
+        fileName: file.name,
+        fileBuffer: new Uint8Array(buffer) as any,
+      });
+      toast.success("Certificado enviado com sucesso!");
+      refetch();
+    } catch (error) {
+      toast.error("Erro ao fazer upload do certificado");
+    } finally {
+      setUploadingId(null);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent, assignmentId: number) => {
+    e.preventDefault();
+    setDragOverId(assignmentId);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverId(null);
+  };
+
+  const handleDrop = (e: React.DragEvent, assignmentId: number) => {
+    e.preventDefault();
+    setDragOverId(null);
+    
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      handleFileSelect(files[0], assignmentId);
     }
   };
 
@@ -210,6 +261,7 @@ export default function Assignments() {
                   <TableHead>Funcionário</TableHead>
                   <TableHead>Curso</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Certificado</TableHead>
                   <TableHead>Data de Atribuição</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
@@ -239,10 +291,60 @@ export default function Assignments() {
                       </div>
                     </TableCell>
                     <TableCell>
+                      {assignment.certificateUrl ? (
+                        <div className="flex items-center gap-2">
+                          <File className="h-4 w-4 text-blue-600" />
+                          <a 
+                            href={assignment.certificateUrl} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:underline text-sm"
+                          >
+                            Ver
+                          </a>
+                        </div>
+                      ) : (
+                        <div
+                          onDragOver={(e) => handleDragOver(e, assignment.id)}
+                          onDragLeave={handleDragLeave}
+                          onDrop={(e) => handleDrop(e, assignment.id)}
+                          className={`border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors ${
+                            dragOverId === assignment.id
+                              ? "border-blue-500 bg-blue-50"
+                              : "border-gray-300 hover:border-gray-400"
+                          }`}
+                          onClick={() => {
+                            const input = document.createElement("input");
+                            input.type = "file";
+                            input.accept = ".pdf,.jpg,.jpeg,.png";
+                            input.onchange = (e: any) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                handleFileSelect(file, assignment.id);
+                              }
+                            };
+                            input.click();
+                          }}
+                        >
+                          {uploadingId === assignment.id ? (
+                            <div className="flex items-center justify-center gap-2">
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              <span className="text-sm text-gray-600">Enviando...</span>
+                            </div>
+                          ) : (
+                            <div className="flex flex-col items-center gap-1">
+                              <Upload className="h-4 w-4 text-gray-400" />
+                              <span className="text-xs text-gray-600">Clique ou arraste</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell>
                       {new Date(assignment.assignedAt).toLocaleDateString("pt-BR")}
                     </TableCell>
                     <TableCell className="text-right space-x-2">
-                      {assignment.status === "pendente" && (
+                      {assignment.status === "pendente" && !assignment.certificateUrl && (
                         <Button
                           variant="ghost"
                           size="sm"
@@ -251,6 +353,17 @@ export default function Assignments() {
                           title="Marcar como concluído"
                         >
                           <CheckCircle2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                      {assignment.certificateUrl && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          asChild
+                        >
+                          <a href={assignment.certificateUrl} target="_blank" rel="noopener noreferrer">
+                            <Download className="h-4 w-4" />
+                          </a>
                         </Button>
                       )}
                       <Button

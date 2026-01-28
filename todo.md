@@ -96,3 +96,13 @@
 - [x] Garantir que relatórios mostram apenas dados da loja selecionada
 - [x] Backend filtra corretamente por storeId
 - [x] Frontend usa selectedStoreId em todas as queries
+
+
+## Upload de Certificados/Diplomas
+- [x] Criar API de upload de certificados no backend
+- [x] Implementar armazenamento em S3
+- [x] Criar interface de upload na página de Atribuições
+- [x] Adicionar visualização de certificados anexados
+- [x] Implementar download de certificados
+- [x] Adicionar validação de tipos de arquivo (PDF, JPG, PNG)
+- [x] Testar fluxo completo de upload e download
