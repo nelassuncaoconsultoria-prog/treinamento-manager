@@ -27,9 +27,14 @@ import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { Button } from "./ui/button";
 
+import { BookOpen, BarChart3, CheckSquare } from "lucide-react";
+
 const menuItems = [
-  { icon: LayoutDashboard, label: "Page 1", path: "/" },
-  { icon: Users, label: "Page 2", path: "/some-path" },
+  { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
+  { icon: Users, label: "Funcionários", path: "/funcionarios" },
+  { icon: BookOpen, label: "Cursos", path: "/cursos" },
+  { icon: CheckSquare, label: "Atribuições", path: "/atribuicoes" },
+  { icon: BarChart3, label: "Relatórios", path: "/relatorios" },
 ];
 
 const SIDEBAR_WIDTH_KEY = "sidebar-width";
@@ -171,7 +176,7 @@ function DashboardLayoutContent({
               {!isCollapsed ? (
                 <div className="flex items-center gap-2 min-w-0">
                   <span className="font-semibold tracking-tight truncate">
-                    Navigation
+                    TreinaManager
                   </span>
                 </div>
               ) : null}

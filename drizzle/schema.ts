@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, boolean, decimal } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -25,4 +25,89 @@ export const users = mysqlTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
-// TODO: Add your tables here
+/**
+ * Funcionários da empresa
+ * Armazena informações de cada funcionário que realizará treinamentos
+ */
+export const employees = mysqlTable("employees", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  email: varchar("email", { length: 320 }).notNull().unique(),
+  function: varchar("function", { length: 255 }).notNull(), // Cargo/Função do funcionário
+  area: mysqlEnum("area", ["vendas", "pos_vendas"]).notNull(), // Área: Vendas ou Pós-Vendas
+  status: mysqlEnum("status", ["ativo", "inativo"]).default("ativo").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Employee = typeof employees.$inferSelect;
+export type InsertEmployee = typeof employees.$inferInsert;
+
+/**
+ * Cursos de treinamento
+ * Armazena os cursos disponíveis para os funcionários
+ */
+export const courses = mysqlTable("courses", {
+  id: int("id").autoincrement().primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  area: mysqlEnum("area", ["vendas", "pos_vendas"]).notNull(), // Área associada ao curso
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Course = typeof courses.$inferSelect;
+export type InsertCourse = typeof courses.$inferInsert;
+
+/**
+ * Atribuições de cursos aos funcionários
+ * Rastreia quais cursos foram atribuídos a cada funcionário e seu status
+ */
+export const courseAssignments = mysqlTable("course_assignments", {
+  id: int("id").autoincrement().primaryKey(),
+  employeeId: int("employeeId").notNull(),
+  courseId: int("courseId").notNull(),
+  status: mysqlEnum("status", ["pendente", "concluido"]).default("pendente").notNull(),
+  assignedAt: timestamp("assignedAt").defaultNow().notNull(),
+  completedAt: timestamp("completedAt"), // Data de conclusão do curso
+  certificateUrl: text("certificateUrl"), // URL do certificado no Google Drive
+  certificateKey: varchar("certificateKey", { length: 512 }), // Chave do arquivo no Google Drive
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type CourseAssignment = typeof courseAssignments.$inferSelect;
+export type InsertCourseAssignment = typeof courseAssignments.$inferInsert;
+
+/**
+ * Configuração de integração com Google Drive
+ * Armazena informações de autenticação e estrutura de pastas
+ */
+export const googleDriveConfig = mysqlTable("google_drive_config", {
+  id: int("id").autoincrement().primaryKey(),
+  accessToken: text("accessToken").notNull(),
+  refreshToken: text("refreshToken"),
+  expiresAt: timestamp("expiresAt"),
+  rootFolderId: varchar("rootFolderId", { length: 255 }), // ID da pasta raiz de treinamentos
+  vendaFolderId: varchar("vendaFolderId", { length: 255 }), // ID da pasta de Vendas
+  posVendaFolderId: varchar("posVendaFolderId", { length: 255 }), // ID da pasta de Pós-Vendas
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type GoogleDriveConfig = typeof googleDriveConfig.$inferSelect;
+export type InsertGoogleDriveConfig = typeof googleDriveConfig.$inferInsert;
+
+/**
+ * Estrutura de pastas de cursos no Google Drive
+ * Rastreia as pastas criadas para cada curso em cada área
+ */
+export const courseFolders = mysqlTable("course_folders", {
+  id: int("id").autoincrement().primaryKey(),
+  courseId: int("courseId").notNull(),
+  area: mysqlEnum("area", ["vendas", "pos_vendas"]).notNull(),
+  folderId: varchar("folderId", { length: 255 }).notNull(), // ID da pasta no Google Drive
+  folderPath: varchar("folderPath", { length: 512 }), // Caminho da pasta (ex: Vendas/Curso XYZ)
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type CourseFolder = typeof courseFolders.$inferSelect;
+export type InsertCourseFolder = typeof courseFolders.$inferInsert;

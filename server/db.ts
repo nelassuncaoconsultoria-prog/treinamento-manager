@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertUser, users, employees, InsertEmployee, courses, InsertCourse, courseAssignments, InsertCourseAssignment, googleDriveConfig, InsertGoogleDriveConfig, courseFolders, InsertCourseFolder } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -89,4 +89,174 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+// ============ EMPLOYEES ============
+
+export async function createEmployee(data: InsertEmployee) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(employees).values(data);
+  return result;
+}
+
+export async function getEmployees() {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return db.select().from(employees).orderBy(desc(employees.createdAt));
+}
+
+export async function getEmployeeById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  
+  const result = await db.select().from(employees).where(eq(employees.id, id)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function updateEmployee(id: number, data: Partial<InsertEmployee>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return db.update(employees).set({ ...data, updatedAt: new Date() }).where(eq(employees.id, id));
+}
+
+export async function deleteEmployee(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return db.delete(employees).where(eq(employees.id, id));
+}
+
+// ============ COURSES ============
+
+export async function createCourse(data: InsertCourse) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(courses).values(data);
+  return result;
+}
+
+export async function getCourses() {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return db.select().from(courses).orderBy(desc(courses.createdAt));
+}
+
+export async function getCourseById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  
+  const result = await db.select().from(courses).where(eq(courses.id, id)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function updateCourse(id: number, data: Partial<InsertCourse>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return db.update(courses).set({ ...data, updatedAt: new Date() }).where(eq(courses.id, id));
+}
+
+export async function deleteCourse(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return db.delete(courses).where(eq(courses.id, id));
+}
+
+// ============ COURSE ASSIGNMENTS ============
+
+export async function createCourseAssignment(data: InsertCourseAssignment) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(courseAssignments).values(data);
+  return result;
+}
+
+export async function getCourseAssignments() {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return db.select().from(courseAssignments).orderBy(desc(courseAssignments.assignedAt));
+}
+
+export async function getCourseAssignmentsByEmployee(employeeId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return db.select().from(courseAssignments).where(eq(courseAssignments.employeeId, employeeId));
+}
+
+export async function getCourseAssignmentById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  
+  const result = await db.select().from(courseAssignments).where(eq(courseAssignments.id, id)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function updateCourseAssignment(id: number, data: Partial<InsertCourseAssignment>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return db.update(courseAssignments).set({ ...data, updatedAt: new Date() }).where(eq(courseAssignments.id, id));
+}
+
+export async function deleteCourseAssignment(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return db.delete(courseAssignments).where(eq(courseAssignments.id, id));
+}
+
+// ============ GOOGLE DRIVE CONFIG ============
+
+export async function getGoogleDriveConfig() {
+  const db = await getDb();
+  if (!db) return undefined;
+  
+  const result = await db.select().from(googleDriveConfig).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function updateGoogleDriveConfig(data: Partial<InsertGoogleDriveConfig>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const existing = await getGoogleDriveConfig();
+  if (existing) {
+    return db.update(googleDriveConfig).set({ ...data, updatedAt: new Date() }).where(eq(googleDriveConfig.id, existing.id));
+  } else {
+    return db.insert(googleDriveConfig).values({ ...data } as InsertGoogleDriveConfig);
+  }
+}
+
+// ============ COURSE FOLDERS ============
+
+export async function createCourseFolder(data: InsertCourseFolder) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return db.insert(courseFolders).values(data);
+}
+
+export async function getCourseFolders() {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return db.select().from(courseFolders).orderBy(desc(courseFolders.createdAt));
+}
+
+export async function getCourseFolderByCourseAndArea(courseId: number, area: "vendas" | "pos_vendas") {
+  const db = await getDb();
+  if (!db) return undefined;
+  
+  const result = await db.select().from(courseFolders).where(
+    and(eq(courseFolders.courseId, courseId), eq(courseFolders.area, area))
+  ).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
