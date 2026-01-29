@@ -8,7 +8,6 @@ import { TRPCError } from "@trpc/server";
 import { notifyOwner } from "./_core/notification";
 import { uploadCertificate } from "./certificateManager";
 import { autoAssignCourseToStores, reAssignCourseByBrand, assignPendingCoursesToEmployee } from "./autoAssignCourses";
-import { COOKIE_NAME } from "@shared/const";
 import { sdk } from "./_core/sdk";
 
 export const appRouter = router({
@@ -97,7 +96,7 @@ export const appRouter = router({
             status: "ativo",
           });
           
-          const employeeId = result[0]?.insertId || 0;
+          const employeeId = result;
           
           // Atribuir automaticamente os cursos pendentes da loja
           if (employeeId) {
@@ -190,7 +189,7 @@ export const appRouter = router({
             autoAssign: input.autoAssign,
           });
           
-          const courseId = result[0]?.insertId || 0;
+          const courseId = result;
           
           // Adicionar funções obrigatórias se fornecidas
           if (input.requiredFunctions && input.requiredFunctions.length > 0) {
@@ -302,7 +301,7 @@ export const appRouter = router({
             courseId: input.courseId,
             status: "pendente",
           });
-          return { success: true, id: result[0]?.insertId || 0 };
+          return { success: true, id: result };
         } catch (error) {
           throw new TRPCError({
             code: "INTERNAL_SERVER_ERROR",

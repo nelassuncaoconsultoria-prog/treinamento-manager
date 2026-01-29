@@ -1,5 +1,6 @@
-import { eq, and, desc, inArray } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/mysql2";
+import { eq, and, desc, inArray, sql } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/node-postgres";
+import { Pool } from "pg";
 import { InsertUser, users, employees, InsertEmployee, courses, InsertCourse, courseAssignments, InsertCourseAssignment, googleDriveConfig, InsertGoogleDriveConfig, courseFolders, InsertCourseFolder, stores, InsertStore, courseRequiredFunctions, InsertCourseRequiredFunction } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -9,7 +10,11 @@ let _db: ReturnType<typeof drizzle> | null = null;
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
-      _db = drizzle(process.env.DATABASE_URL);
+      const pool = new Pool({
+        connectionString: process.env.DATABASE_URL,
+        ssl: { rejectUnauthorized: false }
+      });
+      _db = drizzle(pool);
     } catch (error) {
       console.warn("[Database] Failed to connect:", error);
       _db = null;
@@ -68,7 +73,9 @@ export async function upsertUser(user: InsertUser): Promise<void> {
       updateSet.lastSignedIn = new Date();
     }
 
-    await db.insert(users).values(values).onDuplicateKeyUpdate({
+    // For PostgreSQL, use onConflictDoUpdate
+    await db.insert(users).values(values).onConflictDoUpdate({
+      target: users.openId,
       set: updateSet,
     });
   } catch (error) {
@@ -106,8 +113,8 @@ export async function createEmployee(data: InsertEmployee) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  const result = await db.insert(employees).values(data);
-  return result;
+  const result = await db.insert(employees).values(data).returning({ id: employees.id });
+  return result[0]?.id || 0;
 }
 
 export async function getEmployees() {
@@ -145,8 +152,9 @@ export async function createCourse(data: InsertCourse) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  const result = await db.insert(courses).values(data);
-  return result;
+  // Insert and return the created course with ID
+  const result = await db.insert(courses).values(data).returning({ id: courses.id });
+  return result[0]?.id || 0;
 }
 
 export async function getCourses() {
@@ -184,8 +192,8 @@ export async function createCourseAssignment(data: InsertCourseAssignment) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  const result = await db.insert(courseAssignments).values(data);
-  return result;
+  const result = await db.insert(courseAssignments).values(data).returning({ id: courseAssignments.id });
+  return result[0]?.id || 0;
 }
 
 export async function getCourseAssignments() {
