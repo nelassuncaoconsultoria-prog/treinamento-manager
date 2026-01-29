@@ -12,13 +12,22 @@ export async function getDb() {
     try {
       const pool = new Pool({
         connectionString: process.env.DATABASE_URL,
-        ssl: { rejectUnauthorized: false }
+        ssl: { rejectUnauthorized: false },
+        max: 5,
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 5000,
+      });
+      pool.on('error', (err: any) => {
+        console.error("[Database] Pool error:", err);
       });
       _db = drizzle(pool);
+      console.log("[Database] Connected successfully");
     } catch (error) {
-      console.warn("[Database] Failed to connect:", error);
+      console.error("[Database] Failed to connect:", error);
       _db = null;
     }
+  } else if (!_db) {
+    console.warn("[Database] DATABASE_URL not set");
   }
   return _db;
 }
