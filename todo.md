@@ -184,3 +184,14 @@
 - [x] Validar que server/_core/index.ts usa process.env.PORT
 - [x] Confirmar .gitignore está configurado corretamente
 - [x] Preparar código para publicação no Render
+
+
+## Gerenciamento de Usuários Master por Loja
+- [ ] Criar schema de lojas com campos de nome e ID
+- [ ] Adicionar coluna storeId na tabela users
+- [ ] Criar página de gerenciamento de usuários master
+- [ ] Implementar criação de usuários master vinculados a lojas
+- [ ] Implementar controle de acesso: usuário admin vê todas as lojas
+- [ ] Implementar controle de acesso: usuário master vê apenas sua loja
+- [ ] Corrigir erro de upload de arquivos no sistema
+- [ ] Testar sistema completo no Manus

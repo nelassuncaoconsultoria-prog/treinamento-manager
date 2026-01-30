@@ -9,6 +9,7 @@ import { notifyOwner } from "./_core/notification";
 import { uploadCertificate } from "./certificateManager";
 import { autoAssignCourseToStores, reAssignCourseByBrand, assignPendingCoursesToEmployee } from "./autoAssignCourses";
 import { sdk } from "./_core/sdk";
+import { usersRouter } from "./routers/users";
 
 export const appRouter = router({
   system: systemRouter,
@@ -515,6 +516,9 @@ export const appRouter = router({
         };
       }),
   }),
+
+  // ============ USERS (Master Users Management) ============
+  users: usersRouter,
 
   // ============ DASHBOARD ============
   dashboard: router({

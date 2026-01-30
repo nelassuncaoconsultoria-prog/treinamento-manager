@@ -12,6 +12,7 @@ import EmployeeProfile from "./pages/EmployeeProfile";
 import Courses from "./pages/Courses";
 import Assignments from "./pages/Assignments";
 import Reports from "./pages/Reports";
+import Users from "./pages/Users";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 
@@ -46,6 +47,7 @@ function Router() {
         <Route path="/cursos" component={Courses} />
         <Route path="/atribuicoes" component={Assignments} />
         <Route path="/relatorios" component={Reports} />
+        <Route path="/usuarios" component={Users} />
         <Route path="/" component={Dashboard} />
         <Route path="/404" component={NotFound} />
         <Route component={NotFound} />

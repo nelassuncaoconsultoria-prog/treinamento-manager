@@ -435,3 +435,65 @@ export async function createLocalUser(email: string, name: string) {
   
   return result;
 }
+
+
+// ============ MASTER USERS MANAGEMENT ============
+
+export async function getAllUsers() {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return db.select().from(users).orderBy(desc(users.createdAt));
+}
+
+export async function getUsersByStore(storeId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return db.select().from(users).where(eq(users.storeId, storeId)).orderBy(desc(users.createdAt));
+}
+
+export async function createMasterUser(data: {
+  email: string;
+  name: string;
+  storeId: number;
+  role: 'user' | 'admin';
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(users).values({
+    openId: `local-${data.email}-${Date.now()}`,
+    email: data.email,
+    name: data.name,
+    storeId: data.storeId,
+    role: data.role,
+    loginMethod: 'local',
+    lastSignedIn: new Date(),
+  }).returning({ id: users.id });
+  
+  return result[0]?.id || 0;
+}
+
+export async function updateMasterUser(id: number, data: {
+  name?: string;
+  storeId?: number;
+  role?: 'user' | 'admin';
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const updateData: Record<string, unknown> = { updatedAt: new Date() };
+  if (data.name !== undefined) updateData.name = data.name;
+  if (data.storeId !== undefined) updateData.storeId = data.storeId;
+  if (data.role !== undefined) updateData.role = data.role;
+  
+  return db.update(users).set(updateData).where(eq(users.id, id));
+}
+
+export async function deleteMasterUser(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return db.delete(users).where(eq(users.id, id));
+}

@@ -37,6 +37,10 @@ const menuItems = [
   { icon: BarChart3, label: "Relatórios", path: "/relatorios" },
 ];
 
+const adminMenuItems = [
+  { icon: Users, label: "Gerenciar Usuários", path: "/usuarios" },
+];
+
 const SIDEBAR_WIDTH_KEY = "sidebar-width";
 const DEFAULT_WIDTH = 280;
 const MIN_WIDTH = 200;
@@ -119,6 +123,8 @@ function DashboardLayoutContent({
   const sidebarRef = useRef<HTMLDivElement>(null);
   const activeMenuItem = menuItems.find(item => item.path === location);
   const isMobile = useIsMobile();
+  const isAdmin = user?.role === 'admin';
+  const allMenuItems = isAdmin ? [...menuItems, ...adminMenuItems] : menuItems;
 
   useEffect(() => {
     if (isCollapsed) {
@@ -185,7 +191,7 @@ function DashboardLayoutContent({
 
           <SidebarContent className="gap-0">
             <SidebarMenu className="px-2 py-1">
-              {menuItems.map(item => {
+              {allMenuItems.map(item => {
                 const isActive = location === item.path;
                 return (
                   <SidebarMenuItem key={item.path}>
