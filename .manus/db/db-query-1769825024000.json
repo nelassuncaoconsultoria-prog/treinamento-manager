@@ -1,0 +1,22 @@
+{
+  "query": "SELECT id, openId, name, email, loginMethod, role, storeId, createdAt, updatedAt, lastSignedIn FROM users WHERE email = 'demo@example.com' LIMIT 2;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 42T4hG9D187kezC.root --database jQwXzAYGmozn8vVWxYa65i --execute SELECT id, openId, name, email, loginMethod, role, storeId, createdAt, updatedAt, lastSignedIn FROM users WHERE email = 'demo@example.com' LIMIT 2;",
+  "rows": [
+    {
+      "id": "270001",
+      "openId": "demo@example.com",
+      "name": "demo",
+      "email": "demo@example.com",
+      "loginMethod": "local",
+      "role": "user",
+      "storeId": "NULL",
+      "createdAt": "2026-01-29 15:39:21",
+      "updatedAt": "2026-01-30 14:40:02",
+      "lastSignedIn": "2026-01-30 14:40:03"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\topenId\tname\temail\tloginMethod\trole\tstoreId\tcreatedAt\tupdatedAt\tlastSignedIn\n270001\tdemo@example.com\tdemo\tdemo@example.com\tlocal\tuser\tNULL\t2026-01-29 15:39:21\t2026-01-30 14:40:02\t2026-01-30 14:40:03\n",
+  "stderr": "",
+  "execution_time_ms": 500
+}
