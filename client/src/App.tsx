@@ -17,7 +17,8 @@ import Home from "./pages/Home";
 import Login from "./pages/Login";
 
 function Router() {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, user } = useAuth();
+  console.log('Router - isAuthenticated:', isAuthenticated, 'loading:', loading, 'user:', user);
 
   if (loading) {
     return (

@@ -77,9 +77,8 @@ export async function upsertUser(user: InsertUser): Promise<void> {
       updateSet.lastSignedIn = new Date();
     }
 
-    // For PostgreSQL, use onConflictDoUpdate
-    await db.insert(users).values(values).onConflictDoUpdate({
-      target: users.openId,
+    // For MySQL/TiDB, use onDuplicateKeyUpdate
+    await db.insert(users).values(values).onDuplicateKeyUpdate({
       set: updateSet,
     });
   } catch (error) {
