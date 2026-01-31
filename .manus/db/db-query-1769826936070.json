@@ -1,0 +1,38 @@
+{
+  "query": "SELECT id, email, name, role, \"storeId\" FROM users;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 42T4hG9D187kezC.root --database jQwXzAYGmozn8vVWxYa65i --execute SELECT id, email, name, role, \"storeId\" FROM users;",
+  "rows": [
+    {
+      "id": "1",
+      "email": "nel.assuncaoconsultoria@gmail.com",
+      "name": "Nel Assunção Consultoria",
+      "role": "admin",
+      "storeId": "storeId"
+    },
+    {
+      "id": "30576",
+      "email": "limanelcleton@gmail.com",
+      "name": "Nelcleton Assunção",
+      "role": "user",
+      "storeId": "storeId"
+    },
+    {
+      "id": "510001",
+      "email": "demo@example.com",
+      "name": "demo",
+      "role": "user",
+      "storeId": "storeId"
+    },
+    {
+      "id": "510028",
+      "email": "gestao.qualidade@megaveiculos.com",
+      "name": "Nelcleton Assunção",
+      "role": "admin",
+      "storeId": "storeId"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\temail\tname\trole\tstoreId\n1\tnel.assuncaoconsultoria@gmail.com\tNel Assunção Consultoria\tadmin\tstoreId\n30576\tlimanelcleton@gmail.com\tNelcleton Assunção\tuser\tstoreId\n510001\tdemo@example.com\tdemo\tuser\tstoreId\n510028\tgestao.qualidade@megaveiculos.com\tNelcleton Assunção\tadmin\tstoreId\n",
+  "stderr": "",
+  "execution_time_ms": 344
+}

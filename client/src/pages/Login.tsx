@@ -34,7 +34,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col items-center justify-center p-4">
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="space-y-4">
           <div className="flex justify-center mb-4">
@@ -72,9 +72,6 @@ export default function Login() {
                 disabled={loginMutation.isPending}
                 required
               />
-              <p className="text-xs text-gray-500 mt-1">
-                Demo: use a senha <strong>demo123</strong>
-              </p>
             </div>
 
             {error && (
@@ -98,16 +95,19 @@ export default function Login() {
               )}
             </Button>
           </form>
-
-          <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-            <p className="text-sm text-gray-700">
-              <strong>Credenciais de Teste:</strong><br />
-              Email: <code className="bg-white px-2 py-1 rounded text-xs">demo@example.com</code><br />
-              Senha: <code className="bg-white px-2 py-1 rounded text-xs">demo123</code>
-            </p>
-          </div>
         </CardContent>
       </Card>
+
+      {/* Footer com logo e texto "Desenvolvido por" */}
+      <div className="mt-16 flex items-center gap-6 text-gray-700">
+        <span className="text-sm font-medium">Desenvolvido por</span>
+        <img 
+          src="/nel-logo.png" 
+          alt="Nel Assunção Consultoria" 
+          className="h-20 object-contain" 
+          style={{ filter: 'brightness(0) saturate(100%)' }}
+        />
+      </div>
     </div>
   );
 }

@@ -28,33 +28,34 @@ function Router() {
     );
   }
 
-  if (!isAuthenticated) {
-    return (
-      <Switch>
-        <Route path="/login" component={Login} />
-        <Route path="/" component={Home} />
-        <Route path="/404" component={NotFound} />
-        <Route component={NotFound} />
-      </Switch>
-    );
-  }
-
   return (
-    <DashboardLayout>
-      <Switch>
-        <Route path="/dashboard" component={Dashboard} />
-        <Route path="/funcionarios" component={Employees} />
-        <Route path="/employees/:id" component={EmployeeProfile} />
-        <Route path="/cursos" component={Courses} />
-        <Route path="/atribuicoes" component={Assignments} />
-        <Route path="/relatorios" component={Reports} />
-        <Route path="/usuarios" component={Users} />
-        <Route path="/" component={Dashboard} />
-        <Route path="/404" component={NotFound} />
-        <Route component={NotFound} />
-      </Switch>
-    </DashboardLayout>
+    <Switch>
+      <Route path="/login" component={Login} />
+      {!isAuthenticated && (
+        <>
+          <Route path="/" component={Home} />
+          <Route path="/404" component={NotFound} />
+          <Route component={NotFound} />
+        </>
+      )}
+      {isAuthenticated && (
+        <DashboardLayout>
+          <Route path="/dashboard" component={Dashboard} />
+          <Route path="/funcionarios" component={Employees} />
+          <Route path="/employees/:id" component={EmployeeProfile} />
+          <Route path="/cursos" component={Courses} />
+          <Route path="/atribuicoes" component={Assignments} />
+          <Route path="/relatorios" component={Reports} />
+          <Route path="/usuarios" component={Users} />
+          <Route path="/" component={Dashboard} />
+          <Route path="/404" component={NotFound} />
+          <Route component={NotFound} />
+        </DashboardLayout>
+      )}
+    </Switch>
   );
+
+
 }
 
 

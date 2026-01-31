@@ -28,23 +28,31 @@ export const appRouter = router({
         password: z.string().min(4),
       }))
       .mutation(async ({ input, ctx }) => {
-        if (input.password !== 'demo123') {
-          throw new TRPCError({
-            code: 'UNAUTHORIZED',
-            message: 'Email ou senha inválidos',
-          });
-        }
+        // Verificar se o usuário existe
         let user = await db.getUserByEmail(input.email);
-        if (!user) {
-          await db.createLocalUser(input.email, input.email.split('@')[0]);
+        
+        if (user) {
+          // Usuário existe - verificar a senha
+          const passwordValid = await db.verifyPassword(input.email, input.password);
+          if (!passwordValid) {
+            throw new TRPCError({
+              code: 'UNAUTHORIZED',
+              message: 'Email ou senha inválidos',
+            });
+          }
+        } else {
+          // Usuário não existe - criar novo usuário com a senha fornecida
+          await db.createLocalUser(input.email, input.email.split('@')[0], input.password);
           user = await db.getUserByEmail(input.email);
+          
+          if (!user) {
+            throw new TRPCError({
+              code: 'INTERNAL_SERVER_ERROR',
+              message: 'Erro ao criar usuário',
+            });
+          }
         }
-        if (!user) {
-          throw new TRPCError({
-            code: 'INTERNAL_SERVER_ERROR',
-            message: 'Erro ao criar usuário',
-          });
-        }
+        
         const sessionToken = await sdk.createSessionToken(user.openId, {
           name: user.name || user.email || '',
         });

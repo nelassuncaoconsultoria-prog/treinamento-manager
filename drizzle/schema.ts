@@ -27,6 +27,7 @@ export const users = pgTable("users", {
   name: text("name"),
   email: varchar("email", { length: 320 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
+  passwordHash: text("passwordHash"), // Hash da senha para autenticação local
   role: roleEnum("role").default("user").notNull(),
   storeId: integer("storeId"), // ID da loja vinculada (null para admin que acessa todas)
   createdAt: timestamp("createdAt").defaultNow().notNull(),

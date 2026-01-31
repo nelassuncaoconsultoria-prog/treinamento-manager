@@ -1,0 +1,26 @@
+{
+  "query": "SELECT id, openId, email, name, passwordHash, role FROM users WHERE email = 'gestao.qualidade@megaveiculos.com';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 42T4hG9D187kezC.root --database jQwXzAYGmozn8vVWxYa65i --execute SELECT id, openId, email, name, passwordHash, role FROM users WHERE email = 'gestao.qualidade@megaveiculos.com';",
+  "rows": [
+    {
+      "id": "510028",
+      "openId": "nelcleton-admin-001",
+      "email": "gestao.qualidade@megaveiculos.com",
+      "name": "Nelcleton Assunção",
+      "passwordHash": "NULL",
+      "role": "admin"
+    },
+    {
+      "id": "510044",
+      "openId": "gestao.qualidade@megaveiculos.com",
+      "email": "gestao.qualidade@megaveiculos.com",
+      "name": "Nelcleton Assunção",
+      "passwordHash": "$2b$10$HVNho5Tjld7bg/xzYtdbcOeNb4NS9cEXYN.hlK5cX8l15MKae0lyG",
+      "role": "admin"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\topenId\temail\tname\tpasswordHash\trole\n510028\tnelcleton-admin-001\tgestao.qualidade@megaveiculos.com\tNelcleton Assunção\tNULL\tadmin\n510044\tgestao.qualidade@megaveiculos.com\tgestao.qualidade@megaveiculos.com\tNelcleton Assunção\t$2b$10$HVNho5Tjld7bg/xzYtdbcOeNb4NS9cEXYN.hlK5cX8l15MKae0lyG\tadmin\n",
+  "stderr": "",
+  "execution_time_ms": 353
+}

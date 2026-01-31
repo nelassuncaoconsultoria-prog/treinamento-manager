@@ -3,6 +3,7 @@ import { drizzle } from "drizzle-orm/mysql2";
 import { createPool } from "mysql2/promise";
 import { InsertUser, users, employees, InsertEmployee, courses, InsertCourse, courseAssignments, InsertCourseAssignment, googleDriveConfig, InsertGoogleDriveConfig, courseFolders, InsertCourseFolder, stores, InsertStore, courseRequiredFunctions, InsertCourseRequiredFunction } from "../drizzle/schema";
 import { ENV } from './_core/env';
+import * as bcrypt from 'bcrypt';
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
@@ -77,10 +78,16 @@ export async function upsertUser(user: InsertUser): Promise<void> {
       updateSet.lastSignedIn = new Date();
     }
 
-    // For MySQL/TiDB, use onDuplicateKeyUpdate
-    await db.insert(users).values(values).onDuplicateKeyUpdate({
-      set: updateSet,
-    });
+    // For MySQL/TiDB, check if user exists and insert or update
+    const existingUser = await db.select().from(users).where(eq(users.openId, values.openId)).limit(1);
+    
+    if (existingUser.length > 0) {
+      // User exists, update
+      await db.update(users).set(updateSet).where(eq(users.openId, values.openId));
+    } else {
+      // User doesn't exist, insert
+      await db.insert(users).values(values);
+    }
   } catch (error) {
     console.error("[Database] Failed to upsert user:", error);
     throw error;
@@ -411,9 +418,15 @@ export async function assignCourseToEmployeesByFunction(storeId: number, courseI
 
 // ============ LOCAL AUTH ============
 
-export async function createLocalUser(email: string, name: string) {
+export async function createLocalUser(email: string, name: string, password?: string) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
+  
+  // Hash password if provided
+  let passwordHash = null;
+  if (password) {
+    passwordHash = await bcrypt.hash(password, 10);
+  }
   
   // Use email as openId for local auth
   const result = await db.insert(users).values({
@@ -423,12 +436,33 @@ export async function createLocalUser(email: string, name: string) {
     loginMethod: "local",
     role: "user",
     storeId: null,
+    passwordHash: passwordHash,
     createdAt: new Date(),
     updatedAt: new Date(),
     lastSignedIn: new Date(),
   });
   
   return result;
+}
+
+export async function verifyPassword(email: string, password: string): Promise<boolean> {
+  const user = await getUserByEmail(email);
+  if (!user || !user.passwordHash) {
+    return false;
+  }
+  
+  return bcrypt.compare(password, user.passwordHash);
+}
+
+export async function updateUserPassword(email: string, password: string): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const passwordHash = await bcrypt.hash(password, 10);
+  
+  await db.update(users)
+    .set({ passwordHash, updatedAt: new Date() })
+    .where(eq(users.email, email));
 }
 
 
