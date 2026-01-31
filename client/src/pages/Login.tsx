@@ -99,12 +99,12 @@ export default function Login() {
       </Card>
 
       {/* Footer com logo e texto "Desenvolvido por" */}
-      <div className="mt-16 flex items-center gap-6 text-gray-700">
-        <span className="text-sm font-medium">Desenvolvido por</span>
+      <div className="mt-12 flex items-center gap-3 text-gray-600">
+        <span className="text-xs font-medium">Desenvolvido por</span>
         <img 
           src="/nel-logo.png" 
           alt="Nel Assunção Consultoria" 
-          className="h-20 object-contain" 
+          className="h-10 object-contain" 
           style={{ filter: 'brightness(0) saturate(100%)' }}
         />
       </div>
