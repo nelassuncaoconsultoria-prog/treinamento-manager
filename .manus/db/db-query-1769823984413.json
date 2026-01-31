@@ -1,0 +1,22 @@
+{
+  "query": "SELECT id, openId, name, email, loginMethod, role, storeId, createdAt, updatedAt, lastSignedIn FROM users LIMIT 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 42T4hG9D187kezC.root --database jQwXzAYGmozn8vVWxYa65i --execute SELECT id, openId, name, email, loginMethod, role, storeId, createdAt, updatedAt, lastSignedIn FROM users LIMIT 1;",
+  "rows": [
+    {
+      "id": "1",
+      "openId": "FPWiaReb9dJHdG5EVLZdC8",
+      "name": "Nel Assunção Consultoria",
+      "email": "nel.assuncaoconsultoria@gmail.com",
+      "loginMethod": "google",
+      "role": "admin",
+      "storeId": "NULL",
+      "createdAt": "2026-01-28 00:24:24",
+      "updatedAt": "2026-01-29 05:41:16",
+      "lastSignedIn": "2026-01-29 05:41:16"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\topenId\tname\temail\tloginMethod\trole\tstoreId\tcreatedAt\tupdatedAt\tlastSignedIn\n1\tFPWiaReb9dJHdG5EVLZdC8\tNel Assunção Consultoria\tnel.assuncaoconsultoria@gmail.com\tgoogle\tadmin\tNULL\t2026-01-28 00:24:24\t2026-01-29 05:41:16\t2026-01-29 05:41:16\n",
+  "stderr": "",
+  "execution_time_ms": 352
+}
