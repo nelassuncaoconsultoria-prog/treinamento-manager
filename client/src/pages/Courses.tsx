@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useStore } from "@/hooks/useStore";
+import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -45,6 +46,7 @@ export default function Courses() {
   const [open, setOpen] = useState(false);
   const [selectedFunctions, setSelectedFunctions] = useState<string[]>([]);
   const [functionInput, setFunctionInput] = useState("");
+  const { user } = useAuth();
   const { selectedStoreId, selectStore } = useStore();
   const { data: stores } = trpc.stores.list.useQuery();
   const { data: employees } = trpc.employees.list.useQuery(
@@ -57,11 +59,20 @@ export default function Courses() {
     new Set(employees?.map(e => e.function) || [])
   ).sort();
 
+  // Sincronizar loja selecionada com a loja do usuário
   useEffect(() => {
-    if (!selectedStoreId && stores && stores.length > 0) {
-      selectStore(stores[0].id);
+    if (user && user.storeId) {
+      // Se o usuário não é admin, sempre usar sua loja
+      if (user.role !== 'admin') {
+        if (selectedStoreId !== user.storeId) {
+          selectStore(user.storeId);
+        }
+      } else if (!selectedStoreId && stores && stores.length > 0) {
+        // Se é admin e não há loja selecionada, selecionar a primeira
+        selectStore(stores[0].id);
+      }
     }
-  }, [stores, selectedStoreId, selectStore]);
+  }, [user, selectedStoreId, stores, selectStore]);
 
   const { data: courses, isLoading, refetch } = trpc.courses.list.useQuery(
     { storeId: selectedStoreId || 0 },

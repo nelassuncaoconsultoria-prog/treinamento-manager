@@ -1,5 +1,6 @@
 import { useStore } from "@/hooks/useStore";
 import { trpc } from "@/lib/trpc";
+import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -41,14 +42,22 @@ export default function Assignments() {
   const [uploadingId, setUploadingId] = useState<number | null>(null);
   const [dragOverId, setDragOverId] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { user } = useAuth();
   const { selectedStoreId, selectStore } = useStore();
   const { data: stores } = trpc.stores.list.useQuery();
 
+  // Sincronizar loja selecionada com a loja do usuario
   useEffect(() => {
-    if (!selectedStoreId && stores && stores.length > 0) {
-      selectStore(stores[0].id);
+    if (user && user.storeId) {
+      if (user.role !== 'admin') {
+        if (selectedStoreId !== user.storeId) {
+          selectStore(user.storeId);
+        }
+      } else if (!selectedStoreId && stores && stores.length > 0) {
+        selectStore(stores[0].id);
+      }
     }
-  }, [stores, selectedStoreId, selectStore]);
+  }, [user, selectedStoreId, stores, selectStore]);
   
   const { data: assignments, isLoading, refetch } = trpc.assignments.list.useQuery(
     { storeId: selectedStoreId || 0 },

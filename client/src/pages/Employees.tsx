@@ -29,8 +29,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Loader2, Plus, Trash2, Eye } from "lucide-react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { toast } from "sonner";
+import { useAuth } from "@/_core/hooks/useAuth";
 
 interface EmployeeForm {
   name: string;
@@ -41,14 +42,24 @@ interface EmployeeForm {
 
 export default function Employees() {
   const [open, setOpen] = useState(false);
+  const { user } = useAuth();
   const { selectedStoreId, selectStore } = useStore();
   const { data: stores } = trpc.stores.list.useQuery();
 
+  // Sincronizar loja selecionada com a loja do usuário
   useEffect(() => {
-    if (!selectedStoreId && stores && stores.length > 0) {
-      selectStore(stores[0].id);
+    if (user && user.storeId) {
+      // Se o usuário não é admin, sempre usar sua loja
+      if (user.role !== 'admin') {
+        if (selectedStoreId !== user.storeId) {
+          selectStore(user.storeId);
+        }
+      } else if (!selectedStoreId && stores && stores.length > 0) {
+        // Se é admin e não há loja selecionada, selecionar a primeira
+        selectStore(stores[0].id);
+      }
     }
-  }, [stores, selectedStoreId, selectStore]);
+  }, [user, selectedStoreId, stores, selectStore]);
 
   const { data: employees, isLoading, refetch } = trpc.employees.list.useQuery(
     { storeId: selectedStoreId || 0 },
@@ -56,7 +67,7 @@ export default function Employees() {
   );
   const createMutation = trpc.employees.create.useMutation();
   const deleteMutation = trpc.employees.delete.useMutation();
-  const { register, handleSubmit, reset, watch, setValue } = useForm<EmployeeForm>({
+  const { register, handleSubmit, reset, watch, setValue, control } = useForm<EmployeeForm>({
     defaultValues: {
       area: "vendas",
     },
@@ -151,17 +162,21 @@ export default function Employees() {
               </div>
               <div>
                 <Label htmlFor="area">Área</Label>
-                <Select defaultValue="vendas" onValueChange={(value) => {
-                  setValue("area", value as "vendas" | "pos_vendas");
-                }}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="vendas">Vendas</SelectItem>
-                    <SelectItem value="pos_vendas">Pós-Vendas</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Controller
+                  name="area"
+                  control={control}
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="vendas">Vendas</SelectItem>
+                        <SelectItem value="pos_vendas">Pós-Vendas</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
               </div>
               <Button type="submit" className="w-full" disabled={createMutation.isPending}>
                 {createMutation.isPending ? "Criando..." : "Criar Funcionário"}

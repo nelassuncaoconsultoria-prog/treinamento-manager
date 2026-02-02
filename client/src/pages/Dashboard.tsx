@@ -17,19 +17,20 @@ export default function Dashboard() {
   // Filtrar lojas disponíveis baseado no role do usuário
   const availableStores = user?.role === 'admin' ? stores : stores?.filter(s => s.id === user?.storeId);
 
-  // Se não há loja selecionada e temos lojas disponíveis, selecionar a primeira
+  // Sincronizar loja selecionada com a loja do usuário
   useEffect(() => {
-    if (!selectedStoreId && availableStores && availableStores.length > 0) {
-      selectStore(availableStores[0].id);
+    if (user && availableStores && availableStores.length > 0) {
+      // Se o usuário não é admin, sempre selecionar sua loja
+      if (user.role !== 'admin' && user.storeId) {
+        if (selectedStoreId !== user.storeId) {
+          selectStore(user.storeId);
+        }
+      } else if (!selectedStoreId) {
+        // Se é admin e não há loja selecionada, selecionar a primeira
+        selectStore(availableStores[0].id);
+      }
     }
-  }, [availableStores, selectedStoreId, selectStore]);
-
-  // Se o usuário não é admin e a loja selecionada não é a dele, redirecionar
-  useEffect(() => {
-    if (user?.role !== 'admin' && selectedStoreId && user?.storeId && selectedStoreId !== user.storeId) {
-      selectStore(user.storeId);
-    }
-  }, [user, selectedStoreId, selectStore]);
+  }, [user, availableStores, selectedStoreId, selectStore]);
 
   const { data: assignments, isLoading: assignmentsLoading } = trpc.assignments.list.useQuery(
     { storeId: selectedStoreId || 0 },
