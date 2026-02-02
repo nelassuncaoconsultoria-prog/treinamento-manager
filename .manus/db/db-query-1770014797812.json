@@ -1,0 +1,28 @@
+{
+  "query": "SELECT id, email, name, storeId FROM users WHERE email LIKE '%leidi%' OR email LIKE '%raquel%' OR email LIKE '%julia%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 42T4hG9D187kezC.root --database jQwXzAYGmozn8vVWxYa65i --execute SELECT id, email, name, storeId FROM users WHERE email LIKE '%leidi%' OR email LIKE '%raquel%' OR email LIKE '%julia%';",
+  "rows": [
+    {
+      "id": "570002",
+      "email": "julia.choqueres@megaveiculos.com",
+      "name": "Julia Choqueres",
+      "storeId": "1"
+    },
+    {
+      "id": "570003",
+      "email": "raquel.leal@megaveiculos.com",
+      "name": "Raquel Leal",
+      "storeId": "3"
+    },
+    {
+      "id": "570004",
+      "email": "leidi.porto@megaveiculos.com",
+      "name": "Leidi Porto",
+      "storeId": "2"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\temail\tname\tstoreId\n570002\tjulia.choqueres@megaveiculos.com\tJulia Choqueres\t1\n570003\traquel.leal@megaveiculos.com\tRaquel Leal\t3\n570004\tleidi.porto@megaveiculos.com\tLeidi Porto\t2\n",
+  "stderr": "",
+  "execution_time_ms": 82
+}
