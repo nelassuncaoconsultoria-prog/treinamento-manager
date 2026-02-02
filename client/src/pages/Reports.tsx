@@ -1,5 +1,6 @@
 import { trpc } from "@/lib/trpc";
 import { useStore } from "@/hooks/useStore";
+import { useAuth } from "@/_core/hooks/useAuth";
 import { useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -20,29 +21,32 @@ interface ProgressData {
 }
 
 export default function Reports() {
+  const { user } = useAuth();
   const { selectedStoreId, selectStore } = useStore();
   const { data: stores } = trpc.stores.list.useQuery();
 
   useEffect(() => {
-    if (!selectedStoreId && stores && stores.length > 0) {
-      selectStore(stores[0].id);
+    if (user && user.storeId) {
+      selectStore(user.storeId);
     }
-  }, [stores, selectedStoreId, selectStore]);
+  }, [user, selectStore]);
+
+  const storeIdToUse = user?.storeId || selectedStoreId || 0;
 
   const { data: reportByFunction, isLoading: functionLoading } = trpc.reports.trainingProgressByFunction.useQuery(
-    { storeId: selectedStoreId || 0 },
-    { enabled: !!selectedStoreId }
+    { storeId: storeIdToUse },
+    { enabled: !!storeIdToUse }
   );
   const { data: reportByArea, isLoading: areaLoading } = trpc.reports.trainingProgressByArea.useQuery(
-    { storeId: selectedStoreId || 0 },
-    { enabled: !!selectedStoreId }
+    { storeId: storeIdToUse },
+    { enabled: !!storeIdToUse }
   );
   const { data: overallProgress } = trpc.reports.overallProgress.useQuery(
-    { storeId: selectedStoreId || 0 },
-    { enabled: !!selectedStoreId }
+    { storeId: storeIdToUse },
+    { enabled: !!storeIdToUse }
   );
 
-  if (functionLoading || areaLoading || !selectedStoreId) {
+  if (functionLoading || areaLoading || !storeIdToUse) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="animate-spin h-8 w-8" />
