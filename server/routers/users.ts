@@ -18,6 +18,7 @@ export const usersRouter = router({
     .input(z.object({
       email: z.string().email(),
       name: z.string().min(1),
+      password: z.string().min(6).optional(),
       storeId: z.number(),
       role: z.enum(['user', 'admin']).optional(),
     }))
@@ -36,6 +37,7 @@ export const usersRouter = router({
           name: input.name,
           storeId: input.storeId,
           role: input.role || 'user',
+          password: input.password,
         });
         return result;
       } catch (error) {

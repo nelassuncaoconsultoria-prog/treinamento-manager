@@ -13,6 +13,7 @@ import { useForm } from 'react-hook-form';
 type UserFormData = {
   email: string;
   name: string;
+  password?: string;
   storeId: number;
   role: 'user' | 'admin';
 };
@@ -163,6 +164,19 @@ export default function Users() {
                     </SelectContent>
                   </Select>
                 </div>
+                {!editingId && (
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Senha</label>
+                    <Input
+                      type="password"
+                      placeholder="Digite uma senha segura"
+                      {...register('password', { 
+                        required: 'Senha é obrigatória',
+                        minLength: { value: 6, message: 'Senha deve ter no mínimo 6 caracteres' }
+                      })}
+                    />
+                  </div>
+                )}
                 <Button type="submit" className="w-full" disabled={createMutation.isPending || updateMutation.isPending}>
                   {editingId ? 'Atualizar' : 'Criar'} Usuário
                 </Button>

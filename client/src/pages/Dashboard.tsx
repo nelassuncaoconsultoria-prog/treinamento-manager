@@ -14,12 +14,22 @@ export default function Dashboard() {
   const { data: stores, isLoading: storesLoading } = trpc.stores.list.useQuery();
   const { selectedStoreId, selectStore } = useStore();
 
+  // Filtrar lojas disponíveis baseado no role do usuário
+  const availableStores = user?.role === 'admin' ? stores : stores?.filter(s => s.id === user?.storeId);
+
   // Se não há loja selecionada e temos lojas disponíveis, selecionar a primeira
   useEffect(() => {
-    if (!selectedStoreId && stores && stores.length > 0) {
-      selectStore(stores[0].id);
+    if (!selectedStoreId && availableStores && availableStores.length > 0) {
+      selectStore(availableStores[0].id);
     }
-  }, [stores, selectedStoreId, selectStore]);
+  }, [availableStores, selectedStoreId, selectStore]);
+
+  // Se o usuário não é admin e a loja selecionada não é a dele, redirecionar
+  useEffect(() => {
+    if (user?.role !== 'admin' && selectedStoreId && user?.storeId && selectedStoreId !== user.storeId) {
+      selectStore(user.storeId);
+    }
+  }, [user, selectedStoreId, selectStore]);
 
   const { data: assignments, isLoading: assignmentsLoading } = trpc.assignments.list.useQuery(
     { storeId: selectedStoreId || 0 },
@@ -42,9 +52,9 @@ export default function Dashboard() {
     { enabled: !!selectedStoreId }
   );
 
-  const selectedStore = stores?.find(s => s.id === selectedStoreId);
+  const selectedStore = availableStores?.find(s => s.id === selectedStoreId);
 
-  if (storesLoading || !selectedStoreId) {
+  if (storesLoading || !selectedStoreId || !availableStores || availableStores.length === 0) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="animate-spin h-8 w-8" />
@@ -96,7 +106,7 @@ export default function Dashboard() {
               <SelectValue placeholder="Selecione uma loja" />
             </SelectTrigger>
             <SelectContent>
-              {stores?.map((store) => (
+              {availableStores?.map((store) => (
                 <SelectItem key={store.id} value={store.id.toString()}>
                   {store.storeCode} - {store.storeName}
                 </SelectItem>

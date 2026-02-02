@@ -493,9 +493,15 @@ export async function createMasterUser(data: {
   name: string;
   storeId: number;
   role: 'user' | 'admin';
+  password?: string;
 }) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
+  
+  let passwordHash = null;
+  if (data.password) {
+    passwordHash = await bcrypt.hash(data.password, 10);
+  }
   
   await db.insert(users).values({
     openId: `local-${data.email}-${Date.now()}`,
@@ -504,6 +510,7 @@ export async function createMasterUser(data: {
     storeId: data.storeId,
     role: data.role,
     loginMethod: 'local',
+    passwordHash,
     lastSignedIn: new Date(),
   });
   
