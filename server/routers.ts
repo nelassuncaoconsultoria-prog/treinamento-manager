@@ -82,7 +82,14 @@ export const appRouter = router({
   employees: router({
     list: protectedProcedure
       .input(z.object({ storeId: z.number() }))
-      .query(async ({ input }) => {
+      .query(async ({ input, ctx }) => {
+        // Validar acesso: admin pode acessar qualquer loja, outros só sua própria
+        if (ctx.user?.role !== 'admin' && ctx.user?.storeId !== input.storeId) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'Acesso negado a esta loja',
+          });
+        }
         return db.getEmployeesByStore(input.storeId);
       }),
 
@@ -94,7 +101,14 @@ export const appRouter = router({
         function: z.string().min(1),
         area: z.enum(["vendas", "pos_vendas"]),
       }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ input, ctx }) => {
+        // Validar acesso: admin pode criar em qualquer loja, outros só em sua própria
+        if (ctx.user?.role !== 'admin' && ctx.user?.storeId !== input.storeId) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'Acesso negado a esta loja',
+          });
+        }
         try {
           const result = await db.createEmployee({
             storeId: input.storeId,
@@ -123,8 +137,16 @@ export const appRouter = router({
 
     get: protectedProcedure
       .input(z.object({ id: z.number() }))
-      .query(async ({ input }) => {
-        return db.getEmployeeById(input.id);
+      .query(async ({ input, ctx }) => {
+        const employee = await db.getEmployeeById(input.id);
+        // Validar acesso: admin pode acessar qualquer funcionário, outros só os de sua loja
+        if (employee && ctx.user?.role !== 'admin' && ctx.user?.storeId !== employee.storeId) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'Acesso negado a este funcionário',
+          });
+        }
+        return employee;
       }),
 
     update: protectedProcedure
@@ -136,7 +158,15 @@ export const appRouter = router({
         area: z.enum(["vendas", "pos_vendas"]).optional(),
         status: z.enum(["ativo", "inativo"]).optional(),
       }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ input, ctx }) => {
+        const employee = await db.getEmployeeById(input.id);
+        // Validar acesso: admin pode atualizar qualquer funcionário, outros só os de sua loja
+        if (employee && ctx.user?.role !== 'admin' && ctx.user?.storeId !== employee.storeId) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'Acesso negado a este funcionário',
+          });
+        }
         const { id, ...data } = input;
         await db.updateEmployee(id, data);
         return { success: true };
@@ -144,7 +174,15 @@ export const appRouter = router({
 
     delete: protectedProcedure
       .input(z.object({ id: z.number() }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ input, ctx }) => {
+        const employee = await db.getEmployeeById(input.id);
+        // Validar acesso: admin pode deletar qualquer funcionário, outros só os de sua loja
+        if (employee && ctx.user?.role !== 'admin' && ctx.user?.storeId !== employee.storeId) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'Acesso negado a este funcionário',
+          });
+        }
         await db.deleteEmployee(input.id);
         return { success: true };
       }),
@@ -154,7 +192,14 @@ export const appRouter = router({
         storeId: z.number(),
         employeeId: z.number(),
       }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ input, ctx }) => {
+        // Validar acesso: admin pode atribuir em qualquer loja, outros só em sua própria
+        if (ctx.user?.role !== 'admin' && ctx.user?.storeId !== input.storeId) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'Acesso negado a esta loja',
+          });
+        }
         try {
           const totalAssignments = await assignPendingCoursesToEmployee(input.employeeId, input.storeId);
           return { success: true, totalAssignments };
@@ -171,7 +216,14 @@ export const appRouter = router({
   courses: router({
     list: protectedProcedure
       .input(z.object({ storeId: z.number() }))
-      .query(async ({ input }) => {
+      .query(async ({ input, ctx }) => {
+        // Validar acesso: admin pode acessar qualquer loja, outros só sua própria
+        if (ctx.user?.role !== 'admin' && ctx.user?.storeId !== input.storeId) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'Acesso negado a esta loja',
+          });
+        }
         return db.getCoursesByStore(input.storeId);
       }),
 
@@ -186,7 +238,14 @@ export const appRouter = router({
         autoAssign: z.boolean().default(true),
         requiredFunctions: z.array(z.string()).optional(),
       }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ input, ctx }) => {
+        // Validar acesso: admin pode criar em qualquer loja, outros só em sua própria
+        if (ctx.user?.role !== 'admin' && ctx.user?.storeId !== input.storeId) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'Acesso negado a esta loja',
+          });
+        }
         try {
           const result = await db.createCourse({
             storeId: input.storeId,
@@ -223,8 +282,16 @@ export const appRouter = router({
 
     get: protectedProcedure
       .input(z.object({ id: z.number() }))
-      .query(async ({ input }) => {
-        return db.getCourseById(input.id);
+      .query(async ({ input, ctx }) => {
+        const course = await db.getCourseById(input.id);
+        // Validar acesso: admin pode acessar qualquer curso, outros só os de sua loja
+        if (course && ctx.user?.role !== 'admin' && ctx.user?.storeId !== course.storeId) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'Acesso negado a este curso',
+          });
+        }
+        return course;
       }),
 
     update: protectedProcedure
@@ -237,7 +304,15 @@ export const appRouter = router({
         modality: z.enum(["online", "presencial", "abraadiff"]).optional(),
         autoAssign: z.boolean().optional(),
       }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ input, ctx }) => {
+        const course = await db.getCourseById(input.id);
+        // Validar acesso: admin pode atualizar qualquer curso, outros só os de sua loja
+        if (course && ctx.user?.role !== 'admin' && ctx.user?.storeId !== course.storeId) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'Acesso negado a este curso',
+          });
+        }
         const { id, brand, ...data } = input;
         const updateData: any = data;
         
@@ -256,27 +331,59 @@ export const appRouter = router({
 
     delete: protectedProcedure
       .input(z.object({ id: z.number() }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ input, ctx }) => {
+        const course = await db.getCourseById(input.id);
+        // Validar acesso: admin pode deletar qualquer curso, outros só os de sua loja
+        if (course && ctx.user?.role !== 'admin' && ctx.user?.storeId !== course.storeId) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'Acesso negado a este curso',
+          });
+        }
         await db.deleteCourse(input.id);
         return { success: true };
       }),
 
     getRequiredFunctions: protectedProcedure
       .input(z.object({ courseId: z.number() }))
-      .query(async ({ input }) => {
+      .query(async ({ input, ctx }) => {
+        const course = await db.getCourseById(input.courseId);
+        // Validar acesso: admin pode acessar qualquer curso, outros só os de sua loja
+        if (course && ctx.user?.role !== 'admin' && ctx.user?.storeId !== course.storeId) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'Acesso negado a este curso',
+          });
+        }
         return db.getRequiredFunctionsForCourse(input.courseId);
       }),
 
     addRequiredFunction: protectedProcedure
       .input(z.object({ courseId: z.number(), function: z.string() }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ input, ctx }) => {
+        const course = await db.getCourseById(input.courseId);
+        // Validar acesso: admin pode adicionar em qualquer curso, outros só em cursos de sua loja
+        if (course && ctx.user?.role !== 'admin' && ctx.user?.storeId !== course.storeId) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'Acesso negado a este curso',
+          });
+        }
         await db.addRequiredFunctionToCourse(input.courseId, input.function);
         return { success: true };
       }),
 
     removeRequiredFunction: protectedProcedure
       .input(z.object({ courseId: z.number(), function: z.string() }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ input, ctx }) => {
+        const course = await db.getCourseById(input.courseId);
+        // Validar acesso: admin pode remover de qualquer curso, outros só de cursos de sua loja
+        if (course && ctx.user?.role !== 'admin' && ctx.user?.storeId !== course.storeId) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'Acesso negado a este curso',
+          });
+        }
         await db.deleteRequiredFunctionFromCourse(input.courseId, input.function);
         return { success: true };
       }),
@@ -286,13 +393,28 @@ export const appRouter = router({
   assignments: router({
     list: protectedProcedure
       .input(z.object({ storeId: z.number() }))
-      .query(async ({ input }) => {
+      .query(async ({ input, ctx }) => {
+        // Validar acesso: admin pode acessar qualquer loja, outros só sua própria
+        if (ctx.user?.role !== 'admin' && ctx.user?.storeId !== input.storeId) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'Acesso negado a esta loja',
+          });
+        }
         return db.getAssignmentsByStore(input.storeId);
       }),
 
     getByEmployee: protectedProcedure
       .input(z.object({ employeeId: z.number() }))
-      .query(async ({ input }) => {
+      .query(async ({ input, ctx }) => {
+        const employee = await db.getEmployeeById(input.employeeId);
+        // Validar acesso: admin pode acessar qualquer funcionário, outros só os de sua loja
+        if (employee && ctx.user?.role !== 'admin' && ctx.user?.storeId !== employee.storeId) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'Acesso negado a este funcionário',
+          });
+        }
         return db.getCourseAssignmentsByEmployee(input.employeeId);
       }),
 
@@ -302,7 +424,14 @@ export const appRouter = router({
         employeeId: z.number(),
         courseId: z.number(),
       }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ input, ctx }) => {
+        // Validar acesso: admin pode criar em qualquer loja, outros só em sua própria
+        if (ctx.user?.role !== 'admin' && ctx.user?.storeId !== input.storeId) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'Acesso negado a esta loja',
+          });
+        }
         try {
           const result = await db.createCourseAssignment({
             storeId: input.storeId,
@@ -331,6 +460,13 @@ export const appRouter = router({
           throw new TRPCError({
             code: "NOT_FOUND",
             message: "Atribuição não encontrada",
+          });
+        }
+        // Validar acesso: admin pode completar qualquer atribuição, outros só as de sua loja
+        if (ctx.user?.role !== 'admin' && ctx.user?.storeId !== assignment.storeId) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'Acesso negado a esta atribuição',
           });
         }
 
@@ -362,7 +498,7 @@ export const appRouter = router({
         fileBuffer: z.string(), // Base64 encoded string
         mimeType: z.string().optional(),
       }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ input, ctx }) => {
         try {
           const assignment = await db.getCourseAssignmentById(input.assignmentId);
           if (!assignment) {
@@ -448,7 +584,15 @@ export const appRouter = router({
 
     delete: protectedProcedure
       .input(z.object({ id: z.number() }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ input, ctx }) => {
+        const assignment = await db.getCourseAssignmentById(input.id);
+        // Validar acesso: admin pode deletar qualquer atribuição, outros só as de sua loja
+        if (assignment && ctx.user?.role !== 'admin' && ctx.user?.storeId !== assignment.storeId) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'Acesso negado a esta atribuição',
+          });
+        }
         await db.deleteCourseAssignment(input.id);
         return { success: true };
       }),
@@ -458,7 +602,14 @@ export const appRouter = router({
   reports: router({
     trainingProgressByFunction: protectedProcedure
       .input(z.object({ storeId: z.number() }))
-      .query(async ({ input }) => {
+      .query(async ({ input, ctx }) => {
+        // Validar acesso: admin pode acessar qualquer loja, outros só sua própria
+        if (ctx.user?.role !== 'admin' && ctx.user?.storeId !== input.storeId) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'Acesso negado a esta loja',
+          });
+        }
         const assignments = await db.getAssignmentsByStore(input.storeId);
         const employees = await db.getEmployeesByStore(input.storeId);
 
@@ -485,7 +636,14 @@ export const appRouter = router({
 
     trainingProgressByArea: protectedProcedure
       .input(z.object({ storeId: z.number() }))
-      .query(async ({ input }) => {
+      .query(async ({ input, ctx }) => {
+        // Validar acesso: admin pode acessar qualquer loja, outros só sua própria
+        if (ctx.user?.role !== 'admin' && ctx.user?.storeId !== input.storeId) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'Acesso negado a esta loja',
+          });
+        }
         const assignments = await db.getAssignmentsByStore(input.storeId);
         const employees = await db.getEmployeesByStore(input.storeId);
 
@@ -511,7 +669,14 @@ export const appRouter = router({
 
     overallProgress: protectedProcedure
       .input(z.object({ storeId: z.number() }))
-      .query(async ({ input }) => {
+      .query(async ({ input, ctx }) => {
+        // Validar acesso: admin pode acessar qualquer loja, outros só sua própria
+        if (ctx.user?.role !== 'admin' && ctx.user?.storeId !== input.storeId) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'Acesso negado a esta loja',
+          });
+        }
         const assignments = await db.getAssignmentsByStore(input.storeId);
         const total = assignments.length;
         const completed = assignments.filter(a => a.status === "concluido").length;
@@ -533,7 +698,14 @@ export const appRouter = router({
   dashboard: router({
     modalityDistribution: protectedProcedure
       .input(z.object({ storeId: z.number() }))
-      .query(async ({ input }) => {
+      .query(async ({ input, ctx }) => {
+        // Validar acesso: admin pode acessar qualquer loja, outros só sua própria
+        if (ctx.user?.role !== 'admin' && ctx.user?.storeId !== input.storeId) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'Acesso negado a esta loja',
+          });
+        }
         return db.getModalityDistribution(input.storeId);
       }),
   }),
