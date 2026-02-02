@@ -181,11 +181,14 @@ function DashboardLayoutContent({
               </button>
               {!isCollapsed ? (
                 <div className="flex items-center gap-2 min-w-0">
+                  <img src="/favicon.png" alt="TreinaManager" className="h-6 w-6 shrink-0" />
                   <span className="font-semibold tracking-tight truncate">
                     TreinaManager
                   </span>
                 </div>
-              ) : null}
+              ) : (
+                <img src="/favicon.png" alt="TreinaManager" className="h-6 w-6 shrink-0" />
+              )}
             </div>
           </SidebarHeader>
 
