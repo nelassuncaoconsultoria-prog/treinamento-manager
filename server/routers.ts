@@ -438,9 +438,10 @@ export const appRouter = router({
 
         } catch (error) {
           console.error("Erro ao fazer upload do certificado:", error);
+          if (error instanceof TRPCError) throw error;
           throw new TRPCError({
             code: "INTERNAL_SERVER_ERROR",
-            message: "Erro ao fazer upload do certificado",
+            message: error instanceof Error ? error.message : "Erro ao fazer upload do certificado",
           });
         }
       }),
