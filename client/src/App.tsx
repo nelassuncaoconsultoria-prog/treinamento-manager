@@ -39,23 +39,69 @@ function Router() {
         </>
       )}
       {isAuthenticated && (
-        <DashboardLayout>
-          <Route path="/dashboard" component={Dashboard} />
-          <Route path="/funcionarios" component={Employees} />
-          <Route path="/employees/:id" component={EmployeeProfile} />
-          <Route path="/cursos" component={Courses} />
-          <Route path="/atribuicoes" component={Assignments} />
-          <Route path="/relatorios" component={Reports} />
-          <Route path="/usuarios" component={Users} />
-          <Route path="/" component={Dashboard} />
+        <>
+          <Route path="/dashboard">
+            {() => (
+              <DashboardLayout>
+                <Dashboard />
+              </DashboardLayout>
+            )}
+          </Route>
+          <Route path="/funcionarios">
+            {() => (
+              <DashboardLayout>
+                <Employees />
+              </DashboardLayout>
+            )}
+          </Route>
+          <Route path="/employees/:id">
+            {(params) => (
+              <DashboardLayout>
+                <EmployeeProfile />
+              </DashboardLayout>
+            )}
+          </Route>
+          <Route path="/cursos">
+            {() => (
+              <DashboardLayout>
+                <Courses />
+              </DashboardLayout>
+            )}
+          </Route>
+          <Route path="/atribuicoes">
+            {() => (
+              <DashboardLayout>
+                <Assignments />
+              </DashboardLayout>
+            )}
+          </Route>
+          <Route path="/relatorios">
+            {() => (
+              <DashboardLayout>
+                <Reports />
+              </DashboardLayout>
+            )}
+          </Route>
+          <Route path="/usuarios">
+            {() => (
+              <DashboardLayout>
+                <Users />
+              </DashboardLayout>
+            )}
+          </Route>
+          <Route path="/">
+            {() => (
+              <DashboardLayout>
+                <Dashboard />
+              </DashboardLayout>
+            )}
+          </Route>
           <Route path="/404" component={NotFound} />
           <Route component={NotFound} />
-        </DashboardLayout>
+        </>
       )}
     </Switch>
   );
-
-
 }
 
 

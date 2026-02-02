@@ -123,7 +123,9 @@ export async function createEmployee(data: InsertEmployee) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  const result = await db.insert(employees).values(data).returning({ id: employees.id });
+  await db.insert(employees).values(data);
+  // Get the last inserted ID using a query
+  const result = await db.select({ id: employees.id }).from(employees).orderBy(desc(employees.id)).limit(1);
   return result[0]?.id || 0;
 }
 
@@ -163,7 +165,9 @@ export async function createCourse(data: InsertCourse) {
   if (!db) throw new Error("Database not available");
   
   // Insert and return the created course with ID
-  const result = await db.insert(courses).values(data).returning({ id: courses.id });
+  await db.insert(courses).values(data);
+  // Get the last inserted ID using a query
+  const result = await db.select({ id: courses.id }).from(courses).orderBy(desc(courses.id)).limit(1);
   return result[0]?.id || 0;
 }
 
@@ -202,7 +206,9 @@ export async function createCourseAssignment(data: InsertCourseAssignment) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  const result = await db.insert(courseAssignments).values(data).returning({ id: courseAssignments.id });
+  await db.insert(courseAssignments).values(data);
+  // Get the last inserted ID using a query
+  const result = await db.select({ id: courseAssignments.id }).from(courseAssignments).orderBy(desc(courseAssignments.id)).limit(1);
   return result[0]?.id || 0;
 }
 
@@ -491,7 +497,7 @@ export async function createMasterUser(data: {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  const result = await db.insert(users).values({
+  await db.insert(users).values({
     openId: `local-${data.email}-${Date.now()}`,
     email: data.email,
     name: data.name,
@@ -499,8 +505,10 @@ export async function createMasterUser(data: {
     role: data.role,
     loginMethod: 'local',
     lastSignedIn: new Date(),
-  }).returning({ id: users.id });
+  });
   
+  // Get the last inserted ID using a query
+  const result = await db.select({ id: users.id }).from(users).orderBy(desc(users.id)).limit(1);
   return result[0]?.id || 0;
 }
 
